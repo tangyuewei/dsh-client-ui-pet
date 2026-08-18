@@ -246,9 +246,9 @@ export function SaltedFishPet(): React.JSX.Element {
         ref={recallBtnRef}
         className={css.recallInline}
         onClick={() => setPetHidden(!hidden)}
-        title={hidden ? '显示咸鱼' : '隐藏咸鱼'}
+        title={hidden ? '召唤咸鱼' : '隐藏咸鱼'}
       >
-        {hidden ? '显示咸鱼' : '隐藏咸鱼'}
+        {hidden ? '召唤咸鱼' : '隐藏咸鱼'}
       </button>
       {!hidden && (
         <div

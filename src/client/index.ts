@@ -54,8 +54,23 @@ body.dsh-bg-glow .dsh-layout,
 body.dsh-bg-glow .dsh-layout__main,
 body.dsh-bg-glow .dsh-layout__sidebar,
 body.dsh-bg-glow .dsh-conversation,
-body.dsh-bg-glow .dsh-panel {
-  background: rgba(15, 23, 42, 0.75) !important; /* slate-900 @ 75% */
+body.dsh-bg-glow .dsh-panel,
+body.dsh-bg-glow .dsh-sidebar,
+body.dsh-bg-glow [class*="sidebar"] {
+  background: rgba(15, 23, 42, 0.75) !important; /* dark: slate-900 @ 75% */
+  backdrop-filter: blur(8px);
+}
+/* Light theme override */
+body[data-ds-dark-theme="false"].dsh-bg-glow #root,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-app,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-layout,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-layout__main,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-layout__sidebar,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-conversation,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-panel,
+body[data-ds-dark-theme="false"].dsh-bg-glow .dsh-sidebar,
+body[data-ds-dark-theme="false"].dsh-bg-glow [class*="sidebar"] {
+  background: rgba(255, 255, 255, 0.85) !important; /* light: white @ 85% */
   backdrop-filter: blur(8px);
 }
 body.dsh-bg-glow::after {
