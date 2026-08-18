@@ -1,66 +1,72 @@
 /**
  * Lightweight static engineer background.
  *
- * Renders a full-viewport fixed layer behind all UI via portal to <body>:
- * - Desktop wallpaper image (covers viewport)
- * - A single mouse-following radial light (CSS custom properties, compositor-only
- *   transform — zero reflow, zero repaint, ~0 GPU cost beyond the image itself)
+ * Instead of portaling a div (which runs into body-background, stacking-context,
+ * and .overlayLayer pointer-events issues), this component directly paints the
+ * wallpaper image onto <body> via inline style + a CSS variable for the mouse
+ * glow.  No extra DOM nodes, no z-index wars.
  *
- * No requestAnimationFrame, no setInterval, no floating symbols, no ripples.
- * Mouse tracking updates two CSS variables on the container element; the browser
- * composites the gradient position change entirely on the GPU compositor thread.
+ * - Mouse-following radial glow via CSS custom properties on body (compositor-only)
+ * - No requestAnimationFrame, no setInterval, no floating symbols
  */
-import { useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import css from './Background.module.css'
+import { useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 import { isPetHidden, subscribePetHidden } from './visibility'
 import { BG_IMAGE } from './bg-image'
 
+/** Style tag injected into <head> to set the wallpaper + glow. */
+const STYLE_CSS = `
+body.dsh-bg-active {
+  background-image: url("${BG_IMAGE}") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+body.dsh-bg-active::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 600px 600px at var(--bg-mx, 50%) var(--bg-my, 50%),
+    rgba(57, 100, 254, 0.1),
+    transparent 70%
+  );
+  transition: background 0.05s ease-out;
+}
+`
+
 export function EngineerBackground(): React.JSX.Element | null {
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const hidden = useSyncExternalStore(subscribePetHidden, isPetHidden)
 
-  // Ensure body is transparent AND #root stacks above the background layer.
-  // z-index: -2 on a child of body is painted behind body's own background —
-  // a known CSS stacking-context gotcha. Instead we paint the wallpaper at
-  // z-index: 1 and lift #root to z-index: 2 so the app content always sits on top.
   useEffect(() => {
-    if (isPetHidden()) return
+    if (hidden) return
+
+    // Inject stylesheet
     const tag = document.createElement('style')
-    tag.dataset.dshPetBg = ''
-    tag.textContent = [
-      'body { background: transparent !important; }',
-      '#root { position: relative; z-index: 2; }',
-    ].join('\n')
+    tag.dataset.dshBg = ''
+    tag.textContent = STYLE_CSS
     document.head.appendChild(tag)
-    return () => { tag.remove() }
-  }, [])
 
-  useEffect(() => {
-    const el = containerRef.current
-    if (el === null) return
+    // Activate
+    document.body.classList.add('dsh-bg-active')
+
+    // Mouse tracking — update CSS variables directly on body (no React re-render)
     const onMove = (e: MouseEvent) => {
-      el.style.setProperty('--mx', `${(e.clientX / window.innerWidth) * 100}%`)
-      el.style.setProperty('--my', `${(e.clientY / window.innerHeight) * 100}%`)
+      document.body.style.setProperty('--bg-mx', `${(e.clientX / window.innerWidth) * 100}%`)
+      document.body.style.setProperty('--bg-my', `${(e.clientY / window.innerHeight) * 100}%`)
     }
     window.addEventListener('mousemove', onMove, { passive: true })
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
 
-  if (isPetHidden()) return null
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      document.body.classList.remove('dsh-bg-active')
+      document.body.style.removeProperty('--bg-mx')
+      document.body.style.removeProperty('--bg-my')
+      tag.remove()
+    }
+  }, [hidden])
 
-  return createPortal(
-    <div
-      ref={containerRef}
-      className={css.background}
-      style={{
-        '--mx': '50%',
-        '--my': '50%',
-        backgroundImage: `url("${BG_IMAGE}")`,
-      } as React.CSSProperties}
-    >
-      <div className={css.light} />
-      <div className={css.vignette} />
-    </div>,
-    document.body,
-  )
+  return null
 }
