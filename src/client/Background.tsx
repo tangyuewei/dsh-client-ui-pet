@@ -19,16 +19,21 @@ import { BG_IMAGE } from './bg-image'
 export function EngineerBackground(): React.JSX.Element | null {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
+  // Make body background transparent so the z-index: -2 wallpaper is visible.
+  // The opaque body background paints over any child with negative z-index.
   useEffect(() => {
-    // Skip listeners entirely when hidden — the component returns null.
+    if (isPetHidden()) return
+    const tag = document.createElement('style')
+    tag.dataset.dshPetBg = ''
+    tag.textContent = 'body { background: transparent !important; }'
+    document.head.appendChild(tag)
+    return () => { tag.remove() }
+  }, [])
+
+  useEffect(() => {
     const el = containerRef.current
     if (el === null) return
-
     const onMove = (e: MouseEvent) => {
-      // Update CSS custom properties. The browser batches these into the
-      // compositor paint; no layout or reflow occurs because only `--mx` /
-      // `--my` change (consumed by a background-image radial-gradient whose
-      // position references them).
       el.style.setProperty('--mx', `${(e.clientX / window.innerWidth) * 100}%`)
       el.style.setProperty('--my', `${(e.clientY / window.innerHeight) * 100}%`)
     }
