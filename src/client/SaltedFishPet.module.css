@@ -1,0 +1,203 @@
+.recallInline {
+  position: fixed;
+  z-index: 10000;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #111827;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+  font-family: inherit;
+}
+
+.recallInline:hover {
+  background: #3964fe;
+  color: #fff;
+}
+
+.pet {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;        /* bubble → hunger → fish，气泡在上方 */
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+  user-select: none;
+  cursor: grab;
+  transition: right 0.05s linear, bottom 0.05s linear;
+}
+
+.pet.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* Fixed-size anchor so bubble width never shifts the fish */
+.fishAnchor {
+  position: relative;
+  width: 140px;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+/* ── Bubble ── */
+
+.bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px 12px;
+  max-width: 200px;
+  color: #111827;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  animation: bubbleIn 0.3s ease-out;
+  z-index: 10;
+}
+
+.bubbleMood {
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  color: #3964fe;
+  margin-bottom: 2px;
+}
+
+.bubbleText {
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+/* ── Hunger bar ── */
+
+.hungerBar {
+  width: 60px;
+  height: 6px;
+  background: var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hungerFill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ── Fish body ── */
+
+.fishWrap {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.fishWrap:hover {
+  transform: rotate(-12deg) scale(1.08);
+}
+
+.fishWrap.active {
+  animation: bounce 0.4s ease;
+}
+
+.fish {
+  font-size: 120px; /* 3× of 40px */
+  line-height: 1;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ── Shadow ── */
+
+.shadow {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.08);
+  animation: shadowPulse 3s ease-in-out infinite;
+}
+
+/* ── Keyframes ── */
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(4deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-5px) rotate(-3deg); }
+}
+
+@keyframes bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.15) rotate(-8deg); }
+  50%  { transform: scale(0.92) rotate(4deg); }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shadowPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.08; }
+  50%      { transform: translateX(-50%) scale(0.7); opacity: 0.04; }
+}
+
+/* Senior full-stack engineer background overlay — subtle code-pattern */
+.recall {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  padding: 6px 12px;
+  background: var(--dsw-alias-bg-elevated, #fff);
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary, #111827);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  font-family: inherit;
+  animation: bubbleIn 0.3s ease-out;
+}
+
+.recall:hover {
+  background: var(--dsw-alias-brand-primary, #3964fe);
+  color: #fff;
+}
+
+.bgOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, var(--dsw-alias-brand-primary, #3964fe) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, var(--dsw-alias-brand-secondary, #0ea5e9) 0%, transparent 55%),
+    var(--dsw-alias-bg-base, #f9fafb);
+  opacity: 0.06;
+}
