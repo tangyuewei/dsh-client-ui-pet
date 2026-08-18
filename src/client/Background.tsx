@@ -1,200 +1,55 @@
 /**
- * Interactive "senior full-stack engineer" background overlay.
- * Renders a fixed full-viewport layer with:
- * - Mouse-following radial light gradient
- * - Click ripple particles
- * - Floating code symbols that drift
- * - Subtle grid + scan-line texture
- * - Glass-morphism depth layers
+ * Lightweight static engineer background.
  *
- * Pure presentational; all interactivity via pointer events and timers.
+ * Renders a full-viewport fixed layer behind all UI via portal to <body>:
+ * - Desktop wallpaper image (covers viewport)
+ * - A single mouse-following radial light (CSS custom properties, compositor-only
+ *   transform — zero reflow, zero repaint, ~0 GPU cost beyond the image itself)
  *
- * The layer is portaled to `document.body` instead of staying inside the
- * `shell.overlay` slot container: that container creates its own stacking
- * context (`z-index: 20`), so a `z-index: -2` child would still paint over
- * the whole app and its `.overlayLayer > * { pointer-events: auto }` rule
- * would swallow every click. Portaled directly under `<body>`, the layer's
- * `z-index: -2` and `pointer-events: none` behave as a true wallpaper —
- * behind all UI, never blocking interaction.
- *
- * Visibility is shared with the salted fish pet through the module-level
- * visibility store: hiding the pet also removes the background.
+ * No requestAnimationFrame, no setInterval, no floating symbols, no ripples.
+ * Mouse tracking updates two CSS variables on the container element; the browser
+ * composites the gradient position change entirely on the GPU compositor thread.
  */
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import css from './Background.module.css'
 import { isPetHidden, subscribePetHidden } from './visibility'
-
-const CODE_SYMBOLS = ['{ }', '< />', '[ ]', '=>', '::', '&&', '||', '//', ';;', '$', '@', '#', 'fn()', 'let', 'pub', 'mod', 'impl', 'async', 'await', 'return', 'import', 'export', 'class', 'type', 'enum', 'match', 'select', 'from', 'where', 'join', 'null', 'void', 'true', 'false', 'i32', 'f64', 'bool', 'str', 'map', 'set', 'vec', 'opt', 'res', 'ok', 'err']
-
-interface Particle {
-  id: number
-  symbol: string
-  x: number
-  y: number
-  size: number
-  opacity: number
-  drift: number
-  speed: number
-}
-
-interface Ripple {
-  id: number
-  x: number
-  y: number
-  size: number
-  opacity: number
-}
-
-let nextId = 0
-
-function createSymbol(): Particle {
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  return {
-    id: nextId++,
-    symbol: CODE_SYMBOLS[Math.floor(Math.random() * CODE_SYMBOLS.length)]!,
-    x: Math.random() * vw,
-    y: Math.random() * vh,
-    size: 12 + Math.random() * 16,
-    opacity: 0.04 + Math.random() * 0.08,
-    drift: (Math.random() - 0.5) * 0.3,
-    speed: 0.2 + Math.random() * 0.4,
-  }
-}
+import { BG_IMAGE } from './bg-image'
 
 export function EngineerBackground(): React.JSX.Element | null {
-  const hidden = useSyncExternalStore(subscribePetHidden, isPetHidden)
-  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 }) // normalized 0-1
-  const [ripples, setRipples] = useState<Ripple[]>([])
-  const [symbols, setSymbols] = useState<Particle[]>(() =>
-    Array.from({ length: 30 }, createSymbol),
-  )
-  const frameRef = useRef<number | undefined>(undefined)
-  const rippleTimer = useRef<number | undefined>(undefined)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // Listen on window so the background never blocks events on the UI layer.
   useEffect(() => {
-    if (hidden) return
+    // Skip listeners entirely when hidden — the component returns null.
+    const el = containerRef.current
+    if (el === null) return
+
     const onMove = (e: MouseEvent) => {
-      setMouse({
-        x: e.clientX / window.innerWidth,
-        y: e.clientY / window.innerHeight,
-      })
+      // Update CSS custom properties. The browser batches these into the
+      // compositor paint; no layout or reflow occurs because only `--mx` /
+      // `--my` change (consumed by a background-image radial-gradient whose
+      // position references them).
+      el.style.setProperty('--mx', `${(e.clientX / window.innerWidth) * 100}%`)
+      el.style.setProperty('--my', `${(e.clientY / window.innerHeight) * 100}%`)
     }
-    const onClick = (e: MouseEvent) => {
-      setRipples(prev => [
-        ...prev.slice(-4),
-        { id: nextId++, x: e.clientX, y: e.clientY, size: 0, opacity: 0.5 },
-      ])
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('click', onClick)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('click', onClick)
-    }
-  }, [hidden])
+    window.addEventListener('mousemove', onMove, { passive: true })
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [])
 
-  // Animate floating symbols
-  useEffect(() => {
-    if (hidden) return
-    const tick = () => {
-      setSymbols(prev =>
-        prev.map(s => {
-          let y = s.y - s.speed
-          let x = s.x + s.drift
-          if (y < -40) y = window.innerHeight + 40
-          if (x < -40) x = window.innerWidth + 40
-          if (x > window.innerWidth + 40) x = -40
-          return { ...s, x, y }
-        }),
-      )
-      frameRef.current = requestAnimationFrame(tick)
-    }
-    frameRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (frameRef.current !== undefined) cancelAnimationFrame(frameRef.current)
-    }
-  }, [hidden])
-
-  // Animate ripple decay
-  useEffect(() => {
-    if (hidden) return
-    rippleTimer.current = window.setInterval(() => {
-      setRipples(prev =>
-        prev
-          .map(r => ({ ...r, size: r.size + 30, opacity: r.opacity - 0.02 }))
-          .filter(r => r.opacity > 0),
-      )
-    }, 50)
-    return () => {
-      if (rippleTimer.current !== undefined) clearInterval(rippleTimer.current)
-    }
-  }, [hidden])
-
-  // Gradient light position follows mouse (smooth via CSS transition)
-  const lightX = mouse.x * 100
-  const lightY = mouse.y * 100
-
-  if (hidden) return null
+  if (isPetHidden()) return null
 
   return createPortal(
-    <div className={css.background}>
-      {/* Gradient light that follows mouse */}
-      <div
-        className={css.light}
-        style={{
-          background: `radial-gradient(ellipse 600px 600px at ${lightX}% ${lightY}%, rgba(57,100,254,0.08), transparent 70%)`,
-        }}
-      />
-
-      {/* Subtle grid texture */}
-      <div className={css.grid} />
-
-      {/* Scan line */}
-      <div className={css.scanline} />
-
-      {/* Floating code symbols */}
-      <div className={css.symbolLayer}>
-        {symbols.map(s => (
-          <span
-            key={s.id}
-            className={css.symbol}
-            style={{
-              left: s.x,
-              top: s.y,
-              fontSize: s.size,
-              opacity: s.opacity,
-            }}
-          >
-            {s.symbol}
-          </span>
-        ))}
-      </div>
-
-      {/* Click ripples */}
-      <div className={css.rippleLayer}>
-        {ripples.map(r => (
-          <div
-            key={r.id}
-            className={css.ripple}
-            style={{
-              left: r.x,
-              top: r.y,
-              width: r.size,
-              height: r.size,
-              opacity: r.opacity,
-              marginLeft: -r.size / 2,
-              marginTop: -r.size / 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Corner accents */}
-      <div className={css.cornerTL} />
-      <div className={css.cornerBR} />
+    <div
+      ref={containerRef}
+      className={css.background}
+      style={{
+        '--mx': '50%',
+        '--my': '50%',
+        backgroundImage: `url("${BG_IMAGE}")`,
+      } as React.CSSProperties}
+    >
+      <div className={css.light} />
+      <div className={css.vignette} />
     </div>,
     document.body,
   )

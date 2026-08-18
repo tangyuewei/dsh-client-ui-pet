@@ -1,134 +1,47 @@
-/* Engineer Background — interactive full-viewport overlay */
+/* Lightweight engineer background — static image + mouse-following glow */
 
+/* Wallpaper layer — background-image set via inline style in React */
 .background {
   position: fixed;
   inset: 0;
   z-index: -2; /* behind all UI */
   pointer-events: none; /* never block UI events — mouse tracking via window */
-  overflow: hidden;
-  background:
-    /* base dark gradient */
-    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(57, 100, 254, 0.06), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(14, 165, 233, 0.05), transparent 55%),
-    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 1) 80%),
-    #0f172a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-/* Mouse-following gradient light */
+/* Mouse-following radial glow.
+ * Uses CSS custom properties --mx / --my updated via window mousemove.
+ * Only the gradient position changes; browser composites on GPU without paint. */
 .light {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  transition: background 0.15s ease-out;
+  background: radial-gradient(
+    ellipse 600px 600px at var(--mx) var(--my),
+    rgba(57, 100, 254, 0.08),
+    transparent 70%
+  );
+  transition: background 0.05s ease-out;
   will-change: background;
 }
 
-/* Subtle grid pattern */
-.grid {
+/* Subtle dark vignette to keep text readable over bright wallpaper */
+.vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(57, 100, 254, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(57, 100, 254, 0.02) 1px, transparent 1px);
-  background-size: 60px 60px;
-  animation: gridMove 20s linear infinite;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(15, 23, 42, 0.35) 100%
+  );
 }
 
-@keyframes gridMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 60px 60px; }
-}
-
-/* Scan line */
-.scanline {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(57, 100, 254, 0.06), transparent);
-  animation: scanMove 8s ease-in-out infinite;
-}
-
-@keyframes scanMove {
-  0%, 100% { top: 0%; opacity: 0; }
-  5% { opacity: 1; }
-  45% { top: 95%; opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Floating code symbols layer */
-.symbolLayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  color: rgba(57, 100, 254, 0.9);
-  text-shadow: 0 0 8px rgba(57, 100, 254, 0.4);
-  user-select: none;
-}
-
-.symbol {
-  position: absolute;
-  will-change: transform;
-  transition: transform 0.1s linear;
-}
-
-/* Click ripple layer */
-.rippleLayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  border: 2px solid rgba(57, 100, 254, 0.5);
-  background: transparent;
-  animation: rippleExpand 1.5s ease-out forwards;
-  will-change: transform, opacity;
-}
-
-@keyframes rippleExpand {
-  0% { transform: scale(0); opacity: 0.6; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-/* Corner accent marks */
-.cornerTL,
-.cornerBR {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  pointer-events: none;
-  border-color: rgba(57, 100, 254, 0.15);
-  border-style: solid;
-  opacity: 0.5;
-}
-
-.cornerTL {
-  top: 30px;
-  left: 30px;
-  border-width: 2px 2px 0 0;
-  border-radius: 8px 0 0 0;
-}
-
-.cornerBR {
-  bottom: 30px;
-  right: 30px;
-  border-width: 0 0 2px 2px;
-  border-radius: 0 0 0 8px;
-}
-
-/* Reduced motion */
+/* Reduced motion: disable even the tiny transition */
 @media (prefers-reduced-motion: reduce) {
-  .grid,
-  .scanline,
-  .symbol,
-  .ripple {
-    animation: none !important;
-    transition: none !important;
+  .light {
+    transition: none;
   }
 }
