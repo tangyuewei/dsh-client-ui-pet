@@ -25,22 +25,60 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 export function apply(ctx: ClientContext) {
-  // --- Engineer background: pure DOM, no React, no slot ---
-  // Must NOT go through the slot system: slot registration passes the `name`
-  // config property as a React element prop, and React 19 rejects non-string
-  // `name` on DOM elements.  Instead we paint the wallpaper directly on
-  // <html> and <body> via inline styles (highest CSS precedence) and add a
-  // mouse-tracking glow via a body::after pseudo-element.
+  // --- Engineer background: pure DOM layer, not a slot ---
+  // The slot renderer passes the `name` config property as a React element
+  // prop, and React 19 rejects non-string `name` on DOM elements.  Beyond that,
+  // `base.css` sets `background: var(--dsw-alias-bg-base)` on html/body/#root
+  // — the `background` shorthand implicitly resets background-image to none,
+  // so any inline `style.backgroundImage` on those elements is overridden by
+  // the later CSS rule.
+  //
+  // The only reliable path is a sibling DOM node positioned beneath #root:
+  // insert a full-viewport div as the FIRST child of #root, with z-index: 0
+  // and #root's content stacking above via `position: relative; z-index: 1`.
   let cleanup: () => void = () => {}
 
   ctx.inject(['slots'], (scope: ClientContext) => {
-    // --- Background injection (synchronous, no dynamic import needed) ---
+    // --- Background injection ---
 
-    // Style tag for glow pseudo-element
+    // 1. Wait for #root to exist (it must, since ui-layout renders into it).
+    const root = document.getElementById('root')
+    if (root === null) {
+      // Plugin booted before #root mounted — defer to next tick.
+      const id = window.setTimeout(() => { /* nothing; apply already returned */ }, 0)
+      return () => { window.clearTimeout(id); disposePet() }
+    }
+
+    // 2. Create the wallpaper layer as a sibling positioned beneath #root's
+    //    content.  `position: absolute` + `inset: 0` + parent (body) full-height
+    //    from base.css gives a true full-viewport layer.
+    const layer = document.createElement('div')
+    layer.dataset.dshBgLayer = ''
+    layer.style.cssText = [
+      'position: fixed',
+      'inset: 0',
+      'z-index: 0',
+      'pointer-events: none',
+      `background-image: url("${BG_IMAGE}")`,
+      'background-size: cover',
+      'background-position: center',
+      'background-repeat: no-repeat',
+    ].join('; ')
+    document.body.insertBefore(layer, document.body.firstChild)
+
+    // 3. Lift #root above the wallpaper.  Set inline z-index so a later theme
+    //    update cannot re-sink it; `position: relative` is harmless since base
+    //    CSS only paints body backgrounds.
+    const prevRootPos = root.style.position
+    const prevRootZ = root.style.zIndex
+    root.style.position = 'relative'
+    root.style.zIndex = '1'
+
+    // 4. Mouse-tracking glow via body::after pseudo-element, pointer-events none.
     const style = document.createElement('style')
     style.dataset.dshBg = ''
     style.textContent = `
-body.dsh-bg-active::after {
+body::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -55,26 +93,7 @@ body.dsh-bg-active::after {
 `
     document.head.appendChild(style)
 
-    // Paint wallpaper via inline style on html + body
-    const targets = [document.documentElement, document.body]
-    for (const el of targets) {
-      el.style.backgroundImage = `url("${BG_IMAGE}")`
-      el.style.backgroundSize = 'cover'
-      el.style.backgroundPosition = 'center'
-      el.style.backgroundRepeat = 'no-repeat'
-    }
-    document.body.classList.add('dsh-bg-active')
-
-    // Also try #root in case it has its own opaque background
-    const root = document.getElementById('root')
-    if (root) {
-      root.style.backgroundImage = `url("${BG_IMAGE}")`
-      root.style.backgroundSize = 'cover'
-      root.style.backgroundPosition = 'center'
-      root.style.backgroundRepeat = 'no-repeat'
-    }
-
-    // Mouse tracking — compositor-only, no React re-render
+    // 5. Mouse tracking — compositor-only, no React re-render.
     const onMove = (e: MouseEvent) => {
       document.body.style.setProperty('--bg-mx', `${(e.clientX / window.innerWidth) * 100}%`)
       document.body.style.setProperty('--bg-my', `${(e.clientY / window.innerHeight) * 100}%`)
@@ -83,22 +102,10 @@ body.dsh-bg-active::after {
 
     cleanup = () => {
       window.removeEventListener('mousemove', onMove)
-      document.body.classList.remove('dsh-bg-active')
-      document.body.style.removeProperty('--bg-mx')
-      document.body.style.removeProperty('--bg-my')
-      for (const el of targets) {
-        el.style.removeProperty('background-image')
-        el.style.removeProperty('background-size')
-        el.style.removeProperty('background-position')
-        el.style.removeProperty('background-repeat')
-      }
-      if (root) {
-        root.style.removeProperty('background-image')
-        root.style.removeProperty('background-size')
-        root.style.removeProperty('background-position')
-        root.style.removeProperty('background-repeat')
-      }
       style.remove()
+      layer.remove()
+      root.style.position = prevRootPos
+      root.style.zIndex = prevRootZ
     }
 
     // --- Salted fish pet: React component via slot (unchanged) ---
