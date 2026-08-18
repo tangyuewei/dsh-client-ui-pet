@@ -14,71 +14,36 @@ export const name = '@deepseek-ai/dsh-client-ui-salted-fish-pet'
 /** Required service: the slot registry (cordis fiber inject). */
 export const inject = ['slots'] as const
 
-// shell.overlay is declared (children table) by ui-layout's root layout entry;
-// republish the key here so this package's program sees the SlotMap merge.
-// ui-layout cannot import this augmentation back (dependency direction), so the
-// consumer declares the key it contributes into.
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
     'shell.overlay': { kind: 'list'; scope: 'root' }
   }
 }
 
+/** Force a CSS property with !important — the only way to override
+ *  `background: var(--dsw-alias-bg-base)` in base.css, because that
+ *  shorthand implicitly resets `background-image: none` and no amount of
+ *  normal inline style wins when the CSS engine re-resolves the shorthand. */
+const setBg = (el: HTMLElement, prop: string, val: string) =>
+  el.style.setProperty(prop, val, 'important')
+
 export function apply(ctx: ClientContext) {
-  // --- Engineer background: pure DOM layer, not a slot ---
-  // The slot renderer passes the `name` config property as a React element
-  // prop, and React 19 rejects non-string `name` on DOM elements.  Beyond that,
-  // `base.css` sets `background: var(--dsw-alias-bg-base)` on html/body/#root
-  // — the `background` shorthand implicitly resets background-image to none,
-  // so any inline `style.backgroundImage` on those elements is overridden by
-  // the later CSS rule.
-  //
-  // The only reliable path is a sibling DOM node positioned beneath #root:
-  // insert a full-viewport div as the FIRST child of #root, with z-index: 0
-  // and #root's content stacking above via `position: relative; z-index: 1`.
+  // Background painted directly on <body> — no div, no slot, no z-index wars.
+  // The `background` shorthand in base.css resets background-image to none;
+  // setProperty with 'important' overrides it because !important beats the
+  // non-important shorthand.  App containers inside #root that have their own
+  // opaque backgrounds will cover the wallpaper, but the chat pane, sidebar
+  // gaps, and any transparent area will show the desktop.jpg through body.
+
   let cleanup: () => void = () => {}
 
   ctx.inject(['slots'], (scope: ClientContext) => {
-    // --- Background injection ---
+    // --- Background: wallpaper on body + glow pseudo-element ---
 
-    // 1. Wait for #root to exist (it must, since ui-layout renders into it).
-    const root = document.getElementById('root')
-    if (root === null) {
-      // Plugin booted before #root mounted — defer to next tick.
-      const id = window.setTimeout(() => { /* nothing; apply already returned */ }, 0)
-      return () => { window.clearTimeout(id); disposePet() }
-    }
-
-    // 2. Create the wallpaper layer as a sibling positioned beneath #root's
-    //    content.  `position: absolute` + `inset: 0` + parent (body) full-height
-    //    from base.css gives a true full-viewport layer.
-    const layer = document.createElement('div')
-    layer.dataset.dshBgLayer = ''
-    layer.style.cssText = [
-      'position: fixed',
-      'inset: 0',
-      'z-index: 0',
-      'pointer-events: none',
-      `background-image: url("${BG_IMAGE}")`,
-      'background-size: cover',
-      'background-position: center',
-      'background-repeat: no-repeat',
-    ].join('; ')
-    document.body.insertBefore(layer, document.body.firstChild)
-
-    // 3. Lift #root above the wallpaper.  Set inline z-index so a later theme
-    //    update cannot re-sink it; `position: relative` is harmless since base
-    //    CSS only paints body backgrounds.
-    const prevRootPos = root.style.position
-    const prevRootZ = root.style.zIndex
-    root.style.position = 'relative'
-    root.style.zIndex = '1'
-
-    // 4. Mouse-tracking glow via body::after pseudo-element, pointer-events none.
-    const style = document.createElement('style')
-    style.dataset.dshBg = ''
-    style.textContent = `
-body::after {
+    const glowStyle = document.createElement('style')
+    glowStyle.dataset.dshBg = ''
+    glowStyle.textContent = `
+body.dsh-bg-glow::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -91,21 +56,33 @@ body::after {
   );
 }
 `
-    document.head.appendChild(style)
+    document.head.appendChild(glowStyle)
 
-    // 5. Mouse tracking — compositor-only, no React re-render.
+    // Paint wallpaper on body — !important forces through the CSS shorthand
+    const b = document.body
+    setBg(b, 'background-image', `url("${BG_IMAGE}")`)
+    setBg(b, 'background-size', 'cover')
+    setBg(b, 'background-position', 'center')
+    setBg(b, 'background-repeat', 'no-repeat')
+    b.classList.add('dsh-bg-glow')
+
+    // Mouse tracking — compositor-only
     const onMove = (e: MouseEvent) => {
-      document.body.style.setProperty('--bg-mx', `${(e.clientX / window.innerWidth) * 100}%`)
-      document.body.style.setProperty('--bg-my', `${(e.clientY / window.innerHeight) * 100}%`)
+      b.style.setProperty('--bg-mx', `${(e.clientX / window.innerWidth) * 100}%`)
+      b.style.setProperty('--bg-my', `${(e.clientY / window.innerHeight) * 100}%`)
     }
     window.addEventListener('mousemove', onMove, { passive: true })
 
     cleanup = () => {
       window.removeEventListener('mousemove', onMove)
-      style.remove()
-      layer.remove()
-      root.style.position = prevRootPos
-      root.style.zIndex = prevRootZ
+      b.classList.remove('dsh-bg-glow')
+      b.style.removeProperty('--bg-mx')
+      b.style.removeProperty('--bg-my')
+      b.style.removeProperty('background-image')
+      b.style.removeProperty('background-size')
+      b.style.removeProperty('background-position')
+      b.style.removeProperty('background-repeat')
+      glowStyle.remove()
     }
 
     // --- Salted fish pet: React component via slot (unchanged) ---
