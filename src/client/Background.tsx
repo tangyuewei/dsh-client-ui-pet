@@ -9,7 +9,7 @@
  *
  * Pure presentational; all interactivity via pointer events and timers.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import css from './Background.module.css'
 
 const CODE_SYMBOLS = ['{ }', '< />', '[ ]', '=>', '::', '&&', '||', '//', ';;', '$', '@', '#', 'fn()', 'let', 'pub', 'mod', 'impl', 'async', 'await', 'return', 'import', 'export', 'class', 'type', 'enum', 'match', 'select', 'from', 'where', 'join', 'null', 'void', 'true', 'false', 'i32', 'f64', 'bool', 'str', 'map', 'set', 'vec', 'opt', 'res', 'ok', 'err']
@@ -59,18 +59,26 @@ export function EngineerBackground(): React.JSX.Element {
   const frameRef = useRef<number | undefined>(undefined)
   const rippleTimer = useRef<number | undefined>(undefined)
 
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    setMouse({
-      x: e.clientX / window.innerWidth,
-      y: e.clientY / window.innerHeight,
-    })
-  }, [])
-
-  const onClick = useCallback((e: React.MouseEvent) => {
-    setRipples(prev => [
-      ...prev.slice(-4), // keep max 5 ripples
-      { id: nextId++, x: e.clientX, y: e.clientY, size: 0, opacity: 0.5 },
-    ])
+  // Listen on window so the background never blocks events on the UI layer.
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      setMouse({
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      })
+    }
+    const onClick = (e: MouseEvent) => {
+      setRipples(prev => [
+        ...prev.slice(-4),
+        { id: nextId++, x: e.clientX, y: e.clientY, size: 0, opacity: 0.5 },
+      ])
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('click', onClick)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('click', onClick)
+    }
   }, [])
 
   // Animate floating symbols
@@ -113,11 +121,7 @@ export function EngineerBackground(): React.JSX.Element {
   const lightY = mouse.y * 100
 
   return (
-    <div
-      className={css.background}
-      onMouseMove={onMouseMove}
-      onClick={onClick}
-    >
+    <div className={css.background}>
       {/* Gradient light that follows mouse */}
       <div
         className={css.light}

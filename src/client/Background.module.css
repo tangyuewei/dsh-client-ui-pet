@@ -4,7 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: -2; /* behind all UI */
-  pointer-events: auto; /* enable mouse tracking */
+  pointer-events: none; /* never block UI events — mouse tracking via window */
   overflow: hidden;
   background:
     /* base dark gradient */
