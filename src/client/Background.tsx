@@ -1,36 +1,20 @@
 /**
  * Lightweight static engineer background.
  *
- * Paints the wallpaper image directly on the page and adds a mouse-following
- * radial glow via CSS custom properties.  No portal, no extra DOM nodes.
+ * Paints the wallpaper directly on the page via element.style (inline style
+ * has highest precedence — no CSS !important can override it).  Adds a
+ * mouse-following radial glow via CSS custom properties on body::after.
  *
- * Approach: set background-image on both html and #root (the DSH theme's
- * body background can't be reliably overridden from a plugin, but #root
- * is the actual visible surface).  The glow is a body::after pseudo-element
- * at z-index: 99998 with pointer-events: none.
+ * No portal, no extra DOM nodes, no z-index wars, no CSS specificity battles.
  */
 import { useEffect } from 'react'
 import { useSyncExternalStore } from 'react'
 import { isPetHidden, subscribePetHidden } from './visibility'
 import { BG_IMAGE } from './bg-image'
 
-const STYLE_CSS = `
-/* Wallpaper on html — always visible, even if #root has no explicit background */
-html.dsh-bg-active {
-  background-image: url("${BG_IMAGE}") !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-}
-/* Wallpaper on #root as a fallback — it sits above body but below app content */
-#root.dsh-bg-active {
-  background-image: url("${BG_IMAGE}") !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-}
-/* Mouse-following glow — body::after at highest z-index, pointer-events: none */
-body.dsh-bg-active::after {
+/** Glow pseudo-element CSS — only needs to exist once. */
+const GLOW_CSS = `
+body.dsh-glow::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -50,16 +34,28 @@ export function EngineerBackground(): React.JSX.Element | null {
   useEffect(() => {
     if (hidden) return
 
+    // Inject glow pseudo-element CSS (cheap, no specificity conflict)
     const tag = document.createElement('style')
     tag.dataset.dshBg = ''
-    tag.textContent = STYLE_CSS
+    tag.textContent = GLOW_CSS
     document.head.appendChild(tag)
 
-    // Activate on all three elements
-    document.documentElement.classList.add('dsh-bg-active')
-    document.body.classList.add('dsh-bg-active')
-    const root = document.getElementById('root')
-    root?.classList.add('dsh-bg-active')
+    // Activate glow pseudo-element
+    document.body.classList.add('dsh-glow')
+
+    // Paint wallpaper via inline style — highest precedence, cannot be overridden by any CSS
+    const targets = [
+      document.documentElement,
+      document.body,
+      document.getElementById('root'),
+    ].filter(Boolean) as HTMLElement[]
+
+    for (const el of targets) {
+      el.style.backgroundImage = `url("${BG_IMAGE}")`
+      el.style.backgroundSize = 'cover'
+      el.style.backgroundPosition = 'center'
+      el.style.backgroundRepeat = 'no-repeat'
+    }
 
     // Mouse tracking — compositor-only, no React re-render
     const onMove = (e: MouseEvent) => {
@@ -70,11 +66,15 @@ export function EngineerBackground(): React.JSX.Element | null {
 
     return () => {
       window.removeEventListener('mousemove', onMove)
-      document.documentElement.classList.remove('dsh-bg-active')
-      document.body.classList.remove('dsh-bg-active')
-      root?.classList.remove('dsh-bg-active')
+      document.body.classList.remove('dsh-glow')
       document.body.style.removeProperty('--bg-mx')
       document.body.style.removeProperty('--bg-my')
+      for (const el of targets) {
+        el.style.removeProperty('background-image')
+        el.style.removeProperty('background-size')
+        el.style.removeProperty('background-position')
+        el.style.removeProperty('background-repeat')
+      }
       tag.remove()
     }
   }, [hidden])
