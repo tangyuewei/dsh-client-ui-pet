@@ -7,6 +7,7 @@
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { SaltedFishPet } from './SaltedFishPet.tsx'
+import { EngineerBackground } from './Background.tsx'
 
 export const name = '@deepseek-ai/dsh-client-ui-salted-fish-pet'
 
@@ -24,17 +25,30 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 export function apply(ctx: ClientContext) {
-  // shell.overlay is a list slot: register under a stable id. Wait for the slot
+  // shell.overlay is a list slot: register under stable ids. Wait for the slot
   // to be declared (ui-layout applies its root layout during boot) before
   // registering, so the record exists at registration time and the overlay
   // rides the layout's lifetime.
   ctx.inject(['slots'], (scope: ClientContext) => {
-    const disposeInject = scope.slots.inject('shell.overlay', () =>
+    // Background layer (z-index: -2, behind all UI, reacts to pointer events)
+    const disposeBg = scope.slots.inject('shell.overlay', () =>
+      scope.slots.register({
+        name: 'shell.overlay',
+        id: 'engineerBackground',
+      }, EngineerBackground),
+    )
+
+    // Salted fish pet (z-index: 9999, above all UI)
+    const disposePet = scope.slots.inject('shell.overlay', () =>
       scope.slots.register({
         name: 'shell.overlay',
         id: 'saltedFish',
       }, SaltedFishPet),
     )
-    return () => disposeInject()
+
+    return () => {
+      disposeBg()
+      disposePet()
+    }
   })
 }
