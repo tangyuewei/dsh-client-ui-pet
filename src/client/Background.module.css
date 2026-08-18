@@ -4,7 +4,7 @@
 .background {
   position: fixed;
   inset: 0;
-  z-index: -2; /* behind all UI */
+  z-index: 1; /* above body background, but #root gets z-index: 2 via injected style */
   pointer-events: none; /* never block UI events — mouse tracking via window */
   background-size: cover;
   background-position: center;

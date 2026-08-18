@@ -19,13 +19,18 @@ import { BG_IMAGE } from './bg-image'
 export function EngineerBackground(): React.JSX.Element | null {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // Make body background transparent so the z-index: -2 wallpaper is visible.
-  // The opaque body background paints over any child with negative z-index.
+  // Ensure body is transparent AND #root stacks above the background layer.
+  // z-index: -2 on a child of body is painted behind body's own background —
+  // a known CSS stacking-context gotcha. Instead we paint the wallpaper at
+  // z-index: 1 and lift #root to z-index: 2 so the app content always sits on top.
   useEffect(() => {
     if (isPetHidden()) return
     const tag = document.createElement('style')
     tag.dataset.dshPetBg = ''
-    tag.textContent = 'body { background: transparent !important; }'
+    tag.textContent = [
+      'body { background: transparent !important; }',
+      '#root { position: relative; z-index: 2; }',
+    ].join('\n')
     document.head.appendChild(tag)
     return () => { tag.remove() }
   }, [])
