@@ -5,7 +5,5 @@
  * speech + feed), hover to wiggle, idle timer to drift to random thoughts.
  */
 import React from 'react';
-export declare function SaltedFishPet({ onRecallRequested }: {
-    onRecallRequested?: () => void;
-}): React.JSX.Element;
+export declare function SaltedFishPet(): React.JSX.Element;
 //# sourceMappingURL=SaltedFishPet.d.ts.map

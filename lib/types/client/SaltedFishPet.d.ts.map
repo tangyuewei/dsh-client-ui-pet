@@ -1,1 +1,1 @@
-{"version":3,"file":"SaltedFishPet.d.ts","sourceRoot":"","sources":["../../../src/client/SaltedFishPet.tsx"],"names":[],"mappings":"AAAA;;;;;GAKG;AACH,OAAO,KAA2D,MAAM,OAAO,CAAA;AAmG/E,wBAAgB,aAAa,CAAC,EAAC,iBAAiB,EAAC,EAAE;IAAC,iBAAiB,CAAC,EAAE,MAAM,IAAI,CAAA;CAAC,GAAG,KAAK,CAAC,GAAG,CAAC,OAAO,CAoLtG"}
+{"version":3,"file":"SaltedFishPet.d.ts","sourceRoot":"","sources":["../../../src/client/SaltedFishPet.tsx"],"names":[],"mappings":"AAAA;;;;;GAKG;AACH,OAAO,KAA4D,MAAM,OAAO,CAAA;AAoGhF,wBAAgB,aAAa,IAAI,KAAK,CAAC,GAAG,CAAC,OAAO,CAoLjD"}

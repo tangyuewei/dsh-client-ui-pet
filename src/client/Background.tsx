@@ -8,9 +8,22 @@
  * - Glass-morphism depth layers
  *
  * Pure presentational; all interactivity via pointer events and timers.
+ *
+ * The layer is portaled to `document.body` instead of staying inside the
+ * `shell.overlay` slot container: that container creates its own stacking
+ * context (`z-index: 20`), so a `z-index: -2` child would still paint over
+ * the whole app and its `.overlayLayer > * { pointer-events: auto }` rule
+ * would swallow every click. Portaled directly under `<body>`, the layer's
+ * `z-index: -2` and `pointer-events: none` behave as a true wallpaper —
+ * behind all UI, never blocking interaction.
+ *
+ * Visibility is shared with the salted fish pet through the module-level
+ * visibility store: hiding the pet also removes the background.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import css from './Background.module.css'
+import { isPetHidden, subscribePetHidden } from './visibility'
 
 const CODE_SYMBOLS = ['{ }', '< />', '[ ]', '=>', '::', '&&', '||', '//', ';;', '$', '@', '#', 'fn()', 'let', 'pub', 'mod', 'impl', 'async', 'await', 'return', 'import', 'export', 'class', 'type', 'enum', 'match', 'select', 'from', 'where', 'join', 'null', 'void', 'true', 'false', 'i32', 'f64', 'bool', 'str', 'map', 'set', 'vec', 'opt', 'res', 'ok', 'err']
 
@@ -50,7 +63,8 @@ function createSymbol(): Particle {
   }
 }
 
-export function EngineerBackground(): React.JSX.Element {
+export function EngineerBackground(): React.JSX.Element | null {
+  const hidden = useSyncExternalStore(subscribePetHidden, isPetHidden)
   const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 }) // normalized 0-1
   const [ripples, setRipples] = useState<Ripple[]>([])
   const [symbols, setSymbols] = useState<Particle[]>(() =>
@@ -61,6 +75,7 @@ export function EngineerBackground(): React.JSX.Element {
 
   // Listen on window so the background never blocks events on the UI layer.
   useEffect(() => {
+    if (hidden) return
     const onMove = (e: MouseEvent) => {
       setMouse({
         x: e.clientX / window.innerWidth,
@@ -79,10 +94,11 @@ export function EngineerBackground(): React.JSX.Element {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('click', onClick)
     }
-  }, [])
+  }, [hidden])
 
   // Animate floating symbols
   useEffect(() => {
+    if (hidden) return
     const tick = () => {
       setSymbols(prev =>
         prev.map(s => {
@@ -100,10 +116,11 @@ export function EngineerBackground(): React.JSX.Element {
     return () => {
       if (frameRef.current !== undefined) cancelAnimationFrame(frameRef.current)
     }
-  }, [])
+  }, [hidden])
 
   // Animate ripple decay
   useEffect(() => {
+    if (hidden) return
     rippleTimer.current = window.setInterval(() => {
       setRipples(prev =>
         prev
@@ -114,13 +131,15 @@ export function EngineerBackground(): React.JSX.Element {
     return () => {
       if (rippleTimer.current !== undefined) clearInterval(rippleTimer.current)
     }
-  }, [])
+  }, [hidden])
 
   // Gradient light position follows mouse (smooth via CSS transition)
   const lightX = mouse.x * 100
   const lightY = mouse.y * 100
 
-  return (
+  if (hidden) return null
+
+  return createPortal(
     <div className={css.background}>
       {/* Gradient light that follows mouse */}
       <div
@@ -176,6 +195,7 @@ export function EngineerBackground(): React.JSX.Element {
       {/* Corner accents */}
       <div className={css.cornerTL} />
       <div className={css.cornerBR} />
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -4,8 +4,9 @@
  * Interactivity: drag to move (clamped to viewport), click to react (random mood +
  * speech + feed), hover to wiggle, idle timer to drift to random thoughts.
  */
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import css from './SaltedFishPet.module.css'
+import { isPetHidden, setPetHidden, subscribePetHidden } from './visibility'
 
 const MOODS = {
   happy: { emoji: '🐟', tag: '开心' },
@@ -103,14 +104,14 @@ function clamp(v: number, min: number, max: number): number {
 
 interface Position { x: number; y: number }
 
-export function SaltedFishPet({onRecallRequested}: {onRecallRequested?: () => void}): React.JSX.Element {
+export function SaltedFishPet(): React.JSX.Element {
   const [pos, setPos] = useState<Position | null>(null) // null = anchored bottom-right
   const [mood, setMood] = useState<Mood>('happy')
   const [speech, setSpeech] = useState<string>(() => pick(SPEECH.happy))
   const [showBubble, setShowBubble] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [hunger, setHunger] = useState(60)
-  const [hidden, setHidden] = useState(false)
+  const hidden = useSyncExternalStore(subscribePetHidden, isPetHidden)
   const [vw, setVw] = useState(0)
   const [vh, setVh] = useState(0)
   const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
@@ -244,7 +245,7 @@ export function SaltedFishPet({onRecallRequested}: {onRecallRequested?: () => vo
       <button
         ref={recallBtnRef}
         className={css.recallInline}
-        onClick={() => setHidden(h => !h)}
+        onClick={() => setPetHidden(!hidden)}
         title={hidden ? '显示咸鱼' : '隐藏咸鱼'}
       >
         {hidden ? '显示咸鱼' : '隐藏咸鱼'}
