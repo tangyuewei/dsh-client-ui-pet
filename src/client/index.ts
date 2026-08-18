@@ -7,7 +7,7 @@
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { SaltedFishPet } from './SaltedFishPet.tsx'
-import { BG_IMAGE } from './bg-image.ts'
+import { BG_DARK, BG_LIGHT } from './bg-images.ts'
 
 export const name = '@deepseek-ai/dsh-client-ui-salted-fish-pet'
 
@@ -20,21 +20,34 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-/** Force a CSS property with !important — the only way to override
- *  `background: var(--dsw-alias-bg-base)` in base.css, because that
- *  shorthand implicitly resets `background-image: none` and no amount of
- *  normal inline style wins when the CSS engine re-resolves the shorthand. */
+/** Force a CSS property with !important — overrides `background` shorthand. */
 const setBg = (el: HTMLElement, prop: string, val: string) =>
   el.style.setProperty(prop, val, 'important')
 
-export function apply(ctx: ClientContext) {
-  // Background painted directly on <body> — no div, no slot, no z-index wars.
-  // The `background` shorthand in base.css resets background-image to none;
-  // setProperty with 'important' overrides it because !important beats the
-  // non-important shorthand.  App containers inside #root that have their own
-  // opaque backgrounds will cover the wallpaper, but the chat pane, sidebar
-  // gaps, and any transparent area will show the desktop.jpg through body.
+/** Get current theme-appropriate background URL. */
+const getBgUrl = () => {
+  const dark = document.body.getAttribute('data-ds-dark-theme') === 'true'
+  return dark ? BG_DARK : BG_LIGHT
+}
 
+/** Apply wallpaper to body. */
+const applyWallpaper = (body: HTMLElement) => {
+  const url = getBgUrl()
+  setBg(body, 'background-image', `url("${url}")`)
+  setBg(body, 'background-size', 'cover')
+  setBg(body, 'background-position', 'center')
+  setBg(body, 'background-repeat', 'no-repeat')
+}
+
+/** Remove wallpaper from body. */
+const removeWallpaper = (body: HTMLElement) => {
+  body.style.removeProperty('background-image')
+  body.style.removeProperty('background-size')
+  body.style.removeProperty('background-position')
+  body.style.removeProperty('background-repeat')
+}
+
+export function apply(ctx: ClientContext) {
   let cleanup: () => void = () => {}
 
   ctx.inject(['slots'], (scope: ClientContext) => {
@@ -43,8 +56,7 @@ export function apply(ctx: ClientContext) {
     const glowStyle = document.createElement('style')
     glowStyle.dataset.dshBg = ''
     glowStyle.textContent = `
-/* Make theme backgrounds semi-transparent so body wallpaper shows through
- * while keeping text readable.  Target known layout containers. */
+/* Make theme backgrounds semi-transparent so body wallpaper shows through */
 body.dsh-bg-glow {
   --dsw-alias-bg-base: transparent !important;
 }
@@ -88,13 +100,17 @@ body.dsh-bg-glow::after {
 `
     document.head.appendChild(glowStyle)
 
-    // Paint wallpaper on body — !important forces through the CSS shorthand
     const b = document.body
-    setBg(b, 'background-image', `url("${BG_IMAGE}")`)
-    setBg(b, 'background-size', 'cover')
-    setBg(b, 'background-position', 'center')
-    setBg(b, 'background-repeat', 'no-repeat')
     b.classList.add('dsh-bg-glow')
+    applyWallpaper(b)
+
+    // Watch for theme changes and switch wallpaper
+    const themeObserver = new MutationObserver(() => {
+      if (b.classList.contains('dsh-bg-glow')) {
+        applyWallpaper(b)
+      }
+    })
+    themeObserver.observe(b, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
 
     // Mouse tracking — compositor-only
     const onMove = (e: MouseEvent) => {
@@ -104,18 +120,16 @@ body.dsh-bg-glow::after {
     window.addEventListener('mousemove', onMove, { passive: true })
 
     cleanup = () => {
+      themeObserver.disconnect()
       window.removeEventListener('mousemove', onMove)
       b.classList.remove('dsh-bg-glow')
       b.style.removeProperty('--bg-mx')
       b.style.removeProperty('--bg-my')
-      b.style.removeProperty('background-image')
-      b.style.removeProperty('background-size')
-      b.style.removeProperty('background-position')
-      b.style.removeProperty('background-repeat')
+      removeWallpaper(b)
       glowStyle.remove()
     }
 
-    // --- Salted fish pet: React component via slot (unchanged) ---
+    // --- Salted fish pet: React component via slot ---
     const disposePet = scope.slots.inject('shell.overlay', () =>
       scope.slots.register({
         name: 'shell.overlay',
