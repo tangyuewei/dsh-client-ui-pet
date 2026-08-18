@@ -43,6 +43,12 @@ export function apply(ctx: ClientContext) {
     const glowStyle = document.createElement('style')
     glowStyle.dataset.dshBg = ''
     glowStyle.textContent = `
+/* Make the theme background transparent so body wallpaper shows through */
+body.dsh-bg-glow,
+body.dsh-bg-glow #root,
+body.dsh-bg-glow #root * {
+  --dsw-alias-bg-base: transparent !important;
+}
 body.dsh-bg-glow::after {
   content: '';
   position: fixed;
