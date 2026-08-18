@@ -43,11 +43,20 @@ export function apply(ctx: ClientContext) {
     const glowStyle = document.createElement('style')
     glowStyle.dataset.dshBg = ''
     glowStyle.textContent = `
-/* Make the theme background transparent so body wallpaper shows through */
-body.dsh-bg-glow,
-body.dsh-bg-glow #root,
-body.dsh-bg-glow #root * {
+/* Make theme backgrounds semi-transparent so body wallpaper shows through
+ * while keeping text readable.  Target known layout containers. */
+body.dsh-bg-glow {
   --dsw-alias-bg-base: transparent !important;
+}
+body.dsh-bg-glow #root,
+body.dsh-bg-glow .dsh-app,
+body.dsh-bg-glow .dsh-layout,
+body.dsh-bg-glow .dsh-layout__main,
+body.dsh-bg-glow .dsh-layout__sidebar,
+body.dsh-bg-glow .dsh-conversation,
+body.dsh-bg-glow .dsh-panel {
+  background: rgba(15, 23, 42, 0.75) !important; /* slate-900 @ 75% */
+  backdrop-filter: blur(8px);
 }
 body.dsh-bg-glow::after {
   content: '';
