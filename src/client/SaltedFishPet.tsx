@@ -86,14 +86,16 @@ const SPEECH: Record<Mood, string[]> = {
     '笑话：怒气值满了，自动切换到 “深夜模式”。',
     '提示：面对不可控需求，先写下最小可行方案，再沟通。',
   ],
-};
+}
 
 const MARGIN = 20
 const PET_W = 140
 const PET_H = 150
 
 function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]!
+  // arr is never empty in all call sites (SPEECH[mood], Object.keys(MOODS))
+  const idx = Math.floor(Math.random() * arr.length)
+  return arr[idx] as T
 }
 
 function clamp(v: number, min: number, max: number): number {
