@@ -3,3 +3,9 @@
 
 # 依赖
 node_modules/
+
+# Prebuild 临时产物：prebuild 把 wallpapers/ 缩放+JPEG 编码到这里
+src/client/.wallpapers-build/
+
+# 自动生成的 base64 壁纸清单（每次 bundle 时由 scripts/build-wallpapers.mjs 重新生成）
+src/client/bg-images.generated.ts

@@ -26,9 +26,10 @@
     "lib/types/**/*.d.ts"
   ],
   "scripts": {
-    "bundle": "tsdown",
+    "bundle": "node scripts/build-wallpapers.mjs && tsdown",
     "watch": "tsdown --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build:wallpapers": "node scripts/build-wallpapers.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",

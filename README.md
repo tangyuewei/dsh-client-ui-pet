@@ -27,11 +27,11 @@
 
 ### 工程师壁纸
 
-- **深色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/mcan-s.jpg`，Porsche Macan S，导出为 `BG_DARK`）。
-- **浅色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/porsche-718.jpg`，Porsche 718，导出为 `BG_LIGHT`）。
-- **主题联动**：监听 `body[data-ds-dark-theme]` 属性变化（`MutationObserver`），主题切换瞬间无缝切换壁纸。
+- **多壁纸候选**：7 张图（Porsche 718/ Yu7 ×3 / Macan S / Su7 ×2）由 `scripts/build-wallpapers.mjs` 在 `npm run bundle` 时自动缩放到 1920px JPEG 并 base64 编码进 `bg-images.generated.ts`，丢图即可加入候选。
+- **运行时切换**：右下角 🎨 按钮（`WallpaperPicker`）弹出当前主题的缩略图面板，点击即切换并写入 `localStorage`，深浅主题分别保存。
+- **主题联动**：监听 `body[data-ds-dark-theme]` 属性变化（`MutationObserver`），主题切换瞬间无缝切换到该主题的当前选中壁纸。
 - **透出机制**：通过 CSS 变量将主题背景基色设为透明（`--dsw-alias-bg-base: transparent`），壁纸从 `body` 透出，无需额外 DOM 节点或 z-index 争用。
-- **玻璃拟态列**：侧边栏与中间列采用半透明 + `backdrop-filter: blur + saturate` 的毛玻璃效果，壁纸色调模糊透出，导航与正文保持可读，呈现现代科技氛围；通过 `[class$="sidebarCol"]` / `[class$="centerCol"]` 结尾选择器命中上层层级（仅依赖 CSS Modules local 名后缀，不依赖哈希前缀），深浅主题分别适配透明度。
+- **玻璃拟态列**：侧边栏与中间列采用半透明 + `backdrop-filter: blur + saturate` 的毛玻璃效果，壁纸色调模糊透出，导航与正文保持可读，呈现现代科技氛围；通过 `[class$="sidebarCol"]` / `[class$="centerCol"]` 结尾选择器命中上层层级（仅依赖 CSS Modules local 名后缀，不依赖哈希前缀），深浅主题分别适配透明度（浅色 centerCol 不透明度 0.74 + 22px 模糊以保障文字可读）。
 - **鼠标跟随**：`mousemove`（`passive`）实时写入 `--bg-mx/--bg-my` CSS 变量，为鼠标跟随光晕（见 `Background.tsx` 的 `EngineerBackground`）提供定位。
 
 ### 召唤 / 隐藏
@@ -58,17 +58,28 @@ src/
 ├── index.ts                 # 宿主端入口（空 apply）
 ├── invariant.ts             # 插件不变量占位
 ├── client/
-│   ├── index.ts             # 浏览器端插件：壁纸 + 槽位注册
+│   ├── index.ts             # 浏览器端插件：壁纸 + 毛玻璃 + 槽位注册
 │   ├── SaltedFishPet.tsx    # 咸鱼宠物 React 组件
+│   ├── WallpaperPicker.tsx  # 右下角 🎨 浮动按钮 + 缩略图选择面板
 │   ├── visibility.ts        # 宠物/背景共享显隐状态
-│   ├── bg-images.ts         # 内嵌壁纸（BG_DARK / BG_LIGHT）
+│   ├── bg-images.ts         # 壁纸 API：WALLPAPERS + localStorage 持久化 + 事件总线
 │   ├── bg-image.ts          # 旧版单壁纸常量（BG_IMAGE，遗留）
 │   ├── Background.tsx       # 工程师壁纸组件（EngineerBackground，遗留）
-│   ├── mcan-s.jpg          # 深色壁纸源图（Porsche Macan S）
-│   ├── porsche-718.jpg     # 浅色壁纸源图（Porsche 718）
 │   ├── SaltedFishPet.module.css
-│   └── Background.module.css
+│   ├── Background.module.css
+│   ├── WallpaperPicker.module.css
+│   └── wallpapers/           # 壁纸源图目录：丢图 + npm run bundle 自动加入候选
+│       ├── porsche-718.jpg
+│       ├── mcan-s.jpg
+│       ├── yu7-3.jpg
+│       ├── yu7.jpg
+│       ├── yu7-gt.jpg
+│       ├── su7-1.png
+│       └── su7.png
 └── css-modules.d.ts
+
+scripts/
+└── build-wallpapers.mjs      # prebuild：扫描 wallpapers/ → sips 缩放 → base64 → bg-images.generated.ts
 ```
 
 ## 安装方式
@@ -117,8 +128,9 @@ pnpm dsh web
 |------|------------|
 | `src/client/SaltedFishPet.tsx` | `MOODS`（emoji/tag）、`SPEECH` 台词库、饱腹度衰减间隔、闲置触发间隔、鱼尺寸（`PET_W`/`PET_H`）与边距（`MARGIN`） |
 | `src/client/bg-images.ts` | `BG_DARK` / `BG_LIGHT` 内嵌壁纸（深色 Macan S / 浅色 Porsche 718） |
-| `src/client/mcan-s.jpg` · `porsche-718.jpg` | 壁纸源图，修改后需重新编码进 `bg-images.ts` |
-| `src/client/index.ts` | 透明背景变量名、鼠标跟随变量、壁纸应用逻辑 |
+| `src/client/wallpapers/` | 壁纸源图目录，丢入图片 + 跑 `npm run bundle` 即可自动加入候选列表（prebuild 缩放 + base64 编码） |
+| `src/client/index.ts` | 透明背景变量名、鼠标跟随变量、壁纸应用逻辑、玻璃拟态列、用户选择事件总线 |
+| `src/client/WallpaperPicker.tsx` · `WallpaperPicker.module.css` | 浮动 🎨 按钮 + 缩略图弹窗（运行时切换壁纸） |
 | `src/client/SaltedFishPet.module.css` · `Background.module.css` | 宠物 / 气泡 / 饱腹度条样式、动画关键帧 |
 
 ### 常见调整示例
@@ -133,16 +145,27 @@ setHunger(h => Math.max(0, h - 1))
 }, 60000)
 ```
 
-**切换深色 / 浅色壁纸源**（`bg-images.ts`）：
+**添加 / 更换壁纸**
 
-```ts
-// 替换 BG_DARK（深色，建议 ≥2000px 宽 JPEG）
-export const BG_DARK = 'data:image/jpeg;base64,' + '<your-base64>'
-// 替换 BG_LIGHT（浅色，建议 ≥2000px 宽 JPEG）
-export const BG_LIGHT = 'data:image/jpeg;base64,' + '<your-base64>'
+把图片丢到 `src/client/wallpapers/`，文件名作为 id（如 `mcan-s.jpg` → id `mcan-s`），然后跑 `npm run bundle`：
+
+```bash
+npm run bundle   # = node scripts/build-wallpapers.mjs && tsdown
 ```
 
-> 将图片转为 base64：`base64 -i your-image.jpg | tr -d '\n'`
+prebuild 脚本会用 `sips`（macOS）把每张图缩放到 1920px 宽 + 转为 JPEG，base64 编码到 `bg-images.generated.ts`（gitignored，每次构建自动重新生成），然后 `tsdown` 把新内容打进 `lib/client.js`。**完全不需要手动跑 base64 编码。**
+
+文件名的 theme 归属（深/浅色主题下分别出现哪些壁纸）在 `scripts/build-wallpapers.mjs` 顶部的 `META` 映射中维护，例如：
+
+```js
+const META = {
+  'porsche-718': { name: 'Porsche 718', theme: 'light' },
+  'mcan-s':      { name: 'Macan S',     theme: 'dark'  },
+  // ...
+}
+```
+
+**运行时切换**：右下角 🎨 按钮 → 当前主题下的缩略图面板 → 点击即切换并写入 localStorage（`dsh-ui-pet.wallpaper.light` / `.dark`），刷新与重启后保留。
 
 ## 兼容性说明
 

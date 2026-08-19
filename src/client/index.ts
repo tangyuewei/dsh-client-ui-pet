@@ -6,7 +6,8 @@
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { SaltedFishPet } from './SaltedFishPet.tsx'
-import { BG_DARK, BG_LIGHT } from './bg-images.ts'
+import { WallpaperPicker } from './WallpaperPicker.tsx'
+import { getWallpaperUrl, subscribeWallpaperChange } from './bg-images.ts'
 import { isPetHidden, subscribePetHidden } from './visibility.ts'
 
 export const name = '@deepseek-ai/dsh-client-ui-salted-fish-pet'
@@ -27,7 +28,7 @@ const setBg = (el: HTMLElement, prop: string, val: string) =>
 /** Get current theme-appropriate background URL. */
 const getBgUrl = () => {
   const dark = document.body.hasAttribute('data-ds-dark-theme')
-  return dark ? BG_DARK : BG_LIGHT
+  return getWallpaperUrl(dark ? 'dark' : 'light')
 }
 
 /** Apply wallpaper to body. */
@@ -80,7 +81,7 @@ body.dsh-bg-glow #root * {
 
 /* Sidebar: translucent + heavy blur so the wallpaper glows through, nav stays readable */
 body.dsh-bg-glow [class$="sidebarCol"] {
-  background: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
   position: relative;
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55);
 }
@@ -98,9 +99,13 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="sidebarCol"] {
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Center column: translucent + moderate blur, more solid than sidebar for text legibility */
+/* Center column: in the LIGHT theme the wallpaper can wash out the foreground
+   text, so we go noticeably more opaque here than the sidebar (0.55) and pair
+   it with a slightly stronger blur to soften the underlying image. The dark
+   theme keeps the original 0.62 since deep-toned wallpapers don't fight the
+   text. */
 body.dsh-bg-glow [class$="centerCol"] {
-  background: rgba(255, 255, 255, 0.62) !important;
+  background: rgba(255, 255, 255, 0.74) !important;
   position: relative;
 }
 body.dsh-bg-glow [class$="centerCol"]::before {
@@ -109,11 +114,15 @@ body.dsh-bg-glow [class$="centerCol"]::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  backdrop-filter: blur(22px) saturate(140%);
 }
 body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"] {
   background: rgba(21, 21, 23, 0.62) !important;
+}
+body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"]::before {
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
 }
 `
     document.head.appendChild(glowStyle)
@@ -145,6 +154,14 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"] {
     })
     themeObserver.observe(b, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
 
+    // Re-apply when the user picks a different wallpaper (light or dark).
+    const unsubscribeWallpaperLight = subscribeWallpaperChange('light', () => {
+      if (!document.body.hasAttribute('data-ds-dark-theme')) applyWallpaper(b)
+    })
+    const unsubscribeWallpaperDark = subscribeWallpaperChange('dark', () => {
+      if (document.body.hasAttribute('data-ds-dark-theme')) applyWallpaper(b)
+    })
+
     // Mouse tracking — compositor-only (for future use)
     const onMove = (e: MouseEvent) => {
       b.style.setProperty('--bg-mx', `${(e.clientX / window.innerWidth) * 100}%`)
@@ -155,6 +172,8 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"] {
     cleanup = () => {
       unsubscribeVisibility()
       themeObserver.disconnect()
+      unsubscribeWallpaperLight()
+      unsubscribeWallpaperDark()
       window.removeEventListener('mousemove', onMove)
       b.classList.remove('dsh-bg-glow')
       b.style.removeProperty('--bg-mx')
@@ -171,9 +190,18 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"] {
       }, SaltedFishPet),
     )
 
+    // --- Wallpaper picker: floating button + thumbnail panel ---
+    const disposePicker = scope.slots.inject('shell.overlay', () =>
+      scope.slots.register({
+        name: 'shell.overlay',
+        id: 'wallpaperPicker',
+      }, WallpaperPicker),
+    )
+
     return () => {
       cleanup()
       disposePet()
+      disposePicker()
     }
   })
 }
