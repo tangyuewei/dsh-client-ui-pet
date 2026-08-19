@@ -23,6 +23,12 @@ export function WallpaperPicker(): React.JSX.Element | null {
   // Hide entirely while the user has the pet mascot dismissed.
   const hidden = useSyncExternalStore(subscribePetHidden, isPetHidden)
   const [open, setOpen] = useState(false)
+  // Pinned: the panel floats on top (z-index 10020) and stays open — clicks
+  // outside or on a tile do NOT dismiss it, so the user can compare wallpapers
+  // freely. Unpinned returns to the normal stacked behavior (click-out closes).
+  // The 🎨 trigger keeps an even higher z-index (10030) so the pin toggle is
+  // always reachable even when the panel is pinned above everything else.
+  const [pinned, setPinned] = useState(false)
   // Re-render when either the theme or the chosen wallpaper changes so the
   // selected highlight stays in sync.
   const [, setTick] = useState(0)
@@ -53,7 +59,7 @@ export function WallpaperPicker(): React.JSX.Element | null {
       <button
         type="button"
         ref={triggerRef}
-        className={styles.trigger}
+        className={`${styles.trigger} ${pinned ? styles.triggerPinned : ''}`}
         aria-label="选择壁纸"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
@@ -65,13 +71,23 @@ export function WallpaperPicker(): React.JSX.Element | null {
       {open && (
         <div
           ref={panelRef}
-          className={styles.panel}
+          className={`${styles.panel} ${pinned ? styles.panelPinned : ''}`}
           role="dialog"
           aria-label="选择壁纸"
         >
           <div className={styles.title}>
             <span>{theme === 'dark' ? '深色主题壁纸' : '浅色主题壁纸'}</span>
-            <span className={styles.titleHint}>点击切换</span>
+            <button
+              type="button"
+              className={`${styles.pinBtn} ${pinned ? styles.pinBtnActive : ''}`}
+              aria-pressed={pinned}
+              aria-label={pinned ? '取消置顶' : '置顶'}
+              title={pinned ? '取消置顶' : '置顶（保持面板在最上层）'}
+              onClick={() => setPinned(p => !p)}
+            >
+              <span aria-hidden>{pinned ? '📍' : '📌'}</span>
+              <span>{pinned ? '取消置顶' : '置顶'}</span>
+            </button>
           </div>
           <div className={styles.grid}>
             {choices.map(w => {
@@ -86,7 +102,8 @@ export function WallpaperPicker(): React.JSX.Element | null {
                   aria-label={w.name}
                   onClick={() => {
                     setCurrentWallpaperId(theme, w.id)
-                    setOpen(false)
+                    // Pinned panels stay open so the user can keep comparing.
+                    if (!pinned) setOpen(false)
                   }}
                 >
                   <span className={styles.tileLabel}>{w.name}</span>
@@ -97,9 +114,11 @@ export function WallpaperPicker(): React.JSX.Element | null {
         </div>
       )}
 
-      {/* Close the panel when the user clicks anywhere outside our UI. */}
+      {/* Close the panel when the user clicks anywhere outside our UI —
+          unless the panel is pinned, where it deliberately stays put. */}
       {open && (
         <ClickOutsideCloser
+          enabled={!pinned}
           onClose={() => setOpen(false)}
           triggerRef={triggerRef}
           panelRef={panelRef}
@@ -114,15 +133,18 @@ export function WallpaperPicker(): React.JSX.Element | null {
 }
 
 function ClickOutsideCloser({
+  enabled,
   onClose,
   triggerRef,
   panelRef,
 }: {
+  enabled: boolean
   onClose: () => void
   triggerRef: React.RefObject<HTMLButtonElement | null>
   panelRef: React.RefObject<HTMLDivElement | null>
 }): null {
   useEffect(() => {
+    if (!enabled) return
     const handler = (e: MouseEvent) => {
       const t = e.target as Node | null
       if (triggerRef.current?.contains(t)) return // toggles via its own onClick
@@ -132,6 +154,6 @@ function ClickOutsideCloser({
     // Bubble phase (default): the tile's onClick runs first, then this fires.
     window.addEventListener('click', handler)
     return () => window.removeEventListener('click', handler)
-  }, [onClose, triggerRef, panelRef])
+  }, [enabled, onClose, triggerRef, panelRef])
   return null
 }
