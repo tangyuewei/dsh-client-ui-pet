@@ -1,10 +1,10 @@
-# Salted fish pet plugin — a standalone dsh bundle.
+# dsh-client-ui-pet — a standalone dsh bundle.
 # Add this bundle to your profile's manifest.dsh.profile.bundles array
 # and place this package at:
-#   $DSH_HOME/profiles/node_modules/@deepseek-ai/dsh-client-ui-salted-fish-pet
+#   $DSH_HOME/profiles/node_modules/@deepseek-ai/dsh-client-ui-pet
 #
-# Or use: dsh plugin --profile web add @deepseek-ai/dsh-client-ui-salted-fish-pet
+# Or use: dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
 
 - insert:
-    - id: salted-fish-pet
-      name: '@deepseek-ai/dsh-client-ui-salted-fish-pet'
+    - id: dsh-client-ui-pet
+      name: '@deepseek-ai/dsh-client-ui-pet'

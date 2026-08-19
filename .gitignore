@@ -9,3 +9,6 @@ src/client/.wallpapers-build/
 
 # 自动生成的 base64 壁纸清单（每次 bundle 时由 scripts/build-wallpapers.mjs 重新生成）
 src/client/bg-images.generated.ts
+
+# macOS 系统文件
+.DS_Store

@@ -49,7 +49,7 @@
 | **包类型** | 纯客户端 UI 插件（`platform: 'web'`） |
 | **宿主端行为** | 无（`src/index.ts` 仅导出空 `apply()` 以满足 Cordis Loader） |
 | **浏览器端入口** | `exports["./client"]` → `src/client/index.ts` |
-| **槽位注册** | `shell.overlay`，条目 `id: 'saltedFish'`（宠物组件） |
+| **槽位注册** | `shell.overlay`，条目 `id: 'uiPet'`（宠物组件） |
 | **壁纸挂载** | 在 `src/client/index.ts` 的 `apply()` 内直接作用于 `body`，非独立槽位 |
 | **共享状态** | `visibility.ts` 模块级 store 同步宠物与背景的显隐 |
 

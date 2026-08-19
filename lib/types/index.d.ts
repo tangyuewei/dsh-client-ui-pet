@@ -1,5 +1,5 @@
 /**
- * @deepseek-ai/dsh-client-ui-salted-fish-pet – Node entry (empty host behavior).
+ * @deepseek-ai/dsh-client-ui-pet – Node entry (empty host behavior).
  *
  * Pure UI overlay plugin: the browser half ships via exports["./client"]
  * (discovered through the package.json `dsh.client` declaration). This host

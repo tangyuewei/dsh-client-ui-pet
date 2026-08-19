@@ -1,5 +1,5 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
-export declare const name = "@deepseek-ai/dsh-client-ui-salted-fish-pet";
+export declare const name = "@deepseek-ai/dsh-client-ui-pet";
 /** Required service: the slot registry (cordis fiber inject). */
 export declare const inject: readonly ["slots"];
 declare module '@deepseek-ai/dsh-client-ui-slots' {

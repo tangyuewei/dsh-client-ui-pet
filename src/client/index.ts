@@ -10,7 +10,7 @@ import { WallpaperPicker } from './WallpaperPicker.tsx'
 import { getWallpaperUrl, subscribeWallpaperChange } from './bg-images.ts'
 import { isPetHidden, subscribePetHidden } from './visibility.ts'
 
-export const name = '@deepseek-ai/dsh-client-ui-salted-fish-pet'
+export const name = '@deepseek-ai/dsh-client-ui-pet'
 
 /** Required service: the slot registry (cordis fiber inject). */
 export const inject = ['slots'] as const
@@ -179,7 +179,7 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"]::before {
     const disposePet = scope.slots.inject('shell.overlay', () =>
       scope.slots.register({
         name: 'shell.overlay',
-        id: 'saltedFish',
+        id: 'uiPet',
       }, SaltedFishPet),
     )
 
