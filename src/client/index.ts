@@ -10,7 +10,7 @@ import { WallpaperPicker } from './WallpaperPicker.tsx'
 import { getWallpaperUrl, subscribeWallpaperChange } from './bg-images.ts'
 import { isPetHidden, subscribePetHidden } from './visibility.ts'
 
-export const name = '@deepseek-ai/dsh-client-ui-pet'
+export const name = '@tangyuewei/dsh-client-ui-pet'
 
 /** Required service: the slot registry (cordis fiber inject). */
 export const inject = ['slots'] as const

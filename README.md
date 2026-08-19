@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-pet
+# @tangyuewei/dsh-client-ui-pet
 
 > **咸鱼宠物（Salted Fish Pet）** —— 为 DeepSeek Harness Web UI 打造的桌面宠物插件。一只悬浮在右下角的咸鱼吉祥物，叠加全视口工程师主题壁纸。纯前端展示插件，无服务端行为。
 
@@ -97,7 +97,7 @@ scripts/
 如果你是通过 `npx @deepseek-ai/dsh web` 运行 DeepSeek Harness（未 clone 源码），请使用 DSH 自带的 **profile 插件管理命令**安装本插件，**不需要** clone 仓库或运行 `install.sh`（`install.sh` 仅适用于源码场景）：
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
+npx @deepseek-ai/dsh plugin --profile web add @tangyuewei/dsh-client-ui-pet
 ```
 
 > **前提**：本机需安装 `pnpm`（`dsh plugin add` 本质是在 profile 目录内执行 `pnpm add`）。
@@ -105,7 +105,7 @@ npx @deepseek-ai/dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
 该命令做的事情：
 
 1. 首次运行会自动初始化**持久化 profile 目录 `~/.dsh/profiles/web`**（与 npx 缓存无关，重开终端 / 重跑 npx 依然生效）；
-2. 在该目录内执行 `pnpm add @deepseek-ai/dsh-client-ui-pet` 安装插件及其 peer 依赖；
+2. 在该目录内执行 `pnpm add @tangyuewei/dsh-client-ui-pet` 安装插件及其 peer 依赖；
 3. 因插件声明了 `dsh.bundle.patch`，包名会自动追加进 profile 的 `dsh.profile.bundles` 清单；
 4. 之后 `npx @deepseek-ai/dsh web` 启动时，DSH 会按 bundle 顺序叠加插件的 `cordis.patch.yml`，在 `shell.overlay` 注入咸鱼宠物与壁纸。
 
@@ -114,7 +114,7 @@ npx @deepseek-ai/dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
 如需卸载：
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web remove @deepseek-ai/dsh-client-ui-pet
+npx @deepseek-ai/dsh plugin --profile web remove @tangyuewei/dsh-client-ui-pet
 ```
 
 ### 方式 B：从源码编译 DeepSeek Harness
@@ -141,7 +141,7 @@ bash install.sh
 
 1. **校验环境**：检查 `git` / `node` / `pnpm` 可用，并校验 DSH 源码目录结构完整；
 2. **自动定位 DSH_HOME**：默认取脚本所在目录的上三级（`dsh-client-ui-pet` → `packages/client` → `packages` → `$DSH_HOME`）；若 DSH 源码不在该位置，可用环境变量覆盖：`DSH_HOME=/path/to/dsh bash install.sh`；
-3. **注册依赖**：在 `packages/bundle/web-app/package.json` 的 `dependencies` 中添加 `@deepseek-ai/dsh-client-ui-pet: "workspace:^"`；
+3. **注册依赖**：在 `packages/bundle/web-app/package.json` 的 `dependencies` 中添加 `@tangyuewei/dsh-client-ui-pet: "workspace:^"`；
 4. **注册插件条目**：在 `packages/bundle/web-app/cordis.patch.yml` 的 `- insert:` 块末尾追加插件条目（id 与 name 从插件自身 `package.json` / `cordis.patch.yml` 自动读取，无需手动同步）；
 5. **安装依赖并构建**：回到 `$DSH_HOME` 依次执行 `pnpm install` 与 `pnpm run build`。
 
@@ -153,7 +153,7 @@ bash install.sh
 pnpm dsh web
 ```
 
-插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@deepseek-ai/dsh-client-ui-pet` 已启用。
+插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@tangyuewei/dsh-client-ui-pet` 已启用。
 
 ## 自定义配置
 

@@ -1,10 +1,10 @@
 # dsh-client-ui-pet — a standalone dsh bundle.
 # Add this bundle to your profile's manifest.dsh.profile.bundles array
 # and place this package at:
-#   $DSH_HOME/profiles/node_modules/@deepseek-ai/dsh-client-ui-pet
+#   $DSH_HOME/profiles/node_modules/@tangyuewei/dsh-client-ui-pet
 #
-# Or use: dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
+# Or use: dsh plugin --profile web add @tangyuewei/dsh-client-ui-pet
 
 - insert:
     - id: ui-pet
-      name: '@deepseek-ai/dsh-client-ui-pet'
+      name: '@tangyuewei/dsh-client-ui-pet'

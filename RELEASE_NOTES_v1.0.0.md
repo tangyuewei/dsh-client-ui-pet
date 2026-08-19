@@ -1,11 +1,11 @@
-# @deepseek-ai/dsh-client-ui-pet v1.0.0 发布说明
+# @tangyuewei/dsh-client-ui-pet v1.0.0 发布说明
 
 > **咸鱼宠物（Salted Fish Pet）** —— 为 DeepSeek Harness（DSH）Web UI 打造的桌面宠物插件。  
 > 一只悬浮在右下角的咸鱼吉祥物，叠加全视口工程师主题壁纸。纯前端展示插件，无服务端行为。
 
 - **发布版本**：`1.0.0`
 - **发布日期**：2026-08-19
-- **包名**：`@deepseek-ai/dsh-client-ui-pet`
+- **包名**：`@tangyuewei/dsh-client-ui-pet`
 - **平台**：Web（`dsh.client.platform: 'web'`）
 - **许可证**：MIT
 - **首个提交**：2026-08-18（v0.1.0 种子）→ 本版本历经 33 次提交打磨为首个稳定版
@@ -129,7 +129,7 @@ pnpm dsh web
 ## 8. 升级与迁移
 
 - **从 0.1.0 升级**：无破坏性变更。直接拉取最新代码，`bash install.sh` 重新构建即可。
-- 本版本已将插件注册名统一为 `@deepseek-ai/dsh-client-ui-pet`（cordis 条目 `id: 'uiPet'`），若旧有手写注册需同步更新。
+- 本版本已将插件注册名统一为 `@tangyuewei/dsh-client-ui-pet`（cordis 条目 `id: 'uiPet'`），若旧有手写注册需同步更新。
 - 壁纸选择已改为**主题无关**，旧版「深浅分组」心智模型不再适用；用户选择持久化键仍为 `dsh-ui-pet.wallpaper`。
 
 ## 9. 本版本关键变更（精选自 33 次提交）
@@ -143,7 +143,7 @@ pnpm dsh web
 - 7 张候选壁纸 + 右下角运行时切换面板 + 浅色可读性优化（`e9ff9cf`）
 - 壁纸面板置顶/取消置顶，置顶保持打开且不遮挡 🎨 按钮（`d1dd53e` / `395f271`）
 - 壁纸选择不再区分深浅主题 + 默认 `yu7` + watch 丢图自动重编码（`692218b`）
-- 插件注册名同步为 `@deepseek-ai/dsh-client-ui-pet`（`814a303`）
+- 插件注册名同步为 `@tangyuewei/dsh-client-ui-pet`（`814a303`）
 
 **修复（fix）**
 

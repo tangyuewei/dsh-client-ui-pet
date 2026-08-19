@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-pet",
+  "name": "@tangyuewei/dsh-client-ui-pet",
   "description": "A QQ-pet-style floating salted fish mascot for the DeepSeek Harness web UI",
   "version": "1.0.0",
   "type": "module",
