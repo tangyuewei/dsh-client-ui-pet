@@ -27,8 +27,8 @@
 
 ### 工程师壁纸
 
-- **深色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/desktop.jpg`，导出为 `BG_DARK`）。
-- **浅色主题**：赛博科技风 SVG（网格、电路线、发光节点、数据流，源自 `src/client/light-bg.svg`，导出为 `BG_LIGHT`）。
+- **深色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/mcan-s.jpg`，Porsche Macan S，导出为 `BG_DARK`）。
+- **浅色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/porsche-718.jpg`，Porsche 718，导出为 `BG_LIGHT`）。
 - **主题联动**：监听 `body[data-ds-dark-theme]` 属性变化（`MutationObserver`），主题切换瞬间无缝切换壁纸。
 - **透出机制**：通过 CSS 变量将主题背景基色设为透明（`--dsw-alias-bg-base: transparent`），壁纸从 `body` 透出，无需额外 DOM 节点或 z-index 争用。
 - **鼠标跟随**：`mousemove`（`passive`）实时写入 `--bg-mx/--bg-my` CSS 变量，为鼠标跟随光晕（见 `Background.tsx` 的 `EngineerBackground`）提供定位。
@@ -63,9 +63,8 @@ src/
 │   ├── bg-images.ts         # 内嵌壁纸（BG_DARK / BG_LIGHT）
 │   ├── bg-image.ts          # 旧版单壁纸常量（BG_IMAGE，遗留）
 │   ├── Background.tsx       # 工程师壁纸组件（EngineerBackground，遗留）
-│   ├── desktop.jpg          # 深色壁纸源图
-│   ├── light-bg.svg         # 浅色壁纸源图（矢量）
-│   ├── light-bg.jpg         # 浅色壁纸位图版本
+│   ├── mcan-s.jpg          # 深色壁纸源图（Porsche Macan S）
+│   ├── porsche-718.jpg     # 浅色壁纸源图（Porsche 718）
 │   ├── SaltedFishPet.module.css
 │   └── Background.module.css
 └── css-modules.d.ts
@@ -116,8 +115,8 @@ pnpm dsh web
 | 文件 | 可修改内容 |
 |------|------------|
 | `src/client/SaltedFishPet.tsx` | `MOODS`（emoji/tag）、`SPEECH` 台词库、饱腹度衰减间隔、闲置触发间隔、鱼尺寸（`PET_W`/`PET_H`）与边距（`MARGIN`） |
-| `src/client/bg-images.ts` | `BG_DARK` / `BG_LIGHT` 内嵌壁纸（深色 JPEG / 浅色 SVG） |
-| `src/client/desktop.jpg` · `light-bg.svg` · `light-bg.jpg` | 壁纸源图，修改后需重新编码进 `bg-images.ts` |
+| `src/client/bg-images.ts` | `BG_DARK` / `BG_LIGHT` 内嵌壁纸（深色 Macan S / 浅色 Porsche 718） |
+| `src/client/mcan-s.jpg` · `porsche-718.jpg` | 壁纸源图，修改后需重新编码进 `bg-images.ts` |
 | `src/client/index.ts` | 透明背景变量名、鼠标跟随变量、壁纸应用逻辑 |
 | `src/client/SaltedFishPet.module.css` · `Background.module.css` | 宠物 / 气泡 / 饱腹度条样式、动画关键帧 |
 
@@ -138,8 +137,8 @@ setHunger(h => Math.max(0, h - 1))
 ```ts
 // 替换 BG_DARK（深色，建议 ≥2000px 宽 JPEG）
 export const BG_DARK = 'data:image/jpeg;base64,' + '<your-base64>'
-// 替换 BG_LIGHT（浅色，矢量 SVG 无损缩放）
-export const BG_LIGHT = 'data:image/svg+xml;base64,' + '<your-base64>'
+// 替换 BG_LIGHT（浅色，建议 ≥2000px 宽 JPEG）
+export const BG_LIGHT = 'data:image/jpeg;base64,' + '<your-base64>'
 ```
 
 > 将图片转为 base64：`base64 -i your-image.jpg | tr -d '\n'`
