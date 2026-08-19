@@ -6,5 +6,5 @@
 # Or use: dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
 
 - insert:
-    - id: dsh-client-ui-pet
+    - id: ui-pet
       name: '@deepseek-ai/dsh-client-ui-pet'

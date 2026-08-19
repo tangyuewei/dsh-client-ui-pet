@@ -12,3 +12,6 @@ src/client/bg-images.generated.ts
 
 # macOS 系统文件
 .DS_Store
+
+# CodeBuddy 安全扫描产物
+.codebuddy/

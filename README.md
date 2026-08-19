@@ -9,9 +9,15 @@
 `ui-pet` 是一个基于 [Cordis](https://cordis.js.org/) 的客户端 UI 插件（`platform: 'web'`）。它向 DeepSeek Harness（DSH）Web Shell 的 `shell.overlay` 槽位注入两部分内容：
 
 1. **咸鱼宠物**：一只可拖拽、可喂食、会随机吐槽的咸鱼吉祥物；
-2. **工程师壁纸**：随主题切换的深色 / 浅色全屏壁纸，透过透明主题背景显示。
+2. **工程师壁纸**：全视口壁纸（不区分深浅色，丢入 `wallpapers/` 即可入候选），透过透明主题背景显示。
 
 两部分通过模块级共享状态（`visibility.ts`）联动：点击「隐藏咸鱼」会同时收起宠物与壁纸。
+
+## 演示
+
+![ui-pet 功能演示](docs/demo.gif)
+
+*演示内容：默认 `yu7` 毛玻璃背景与咸鱼 → 打开壁纸面板 → 切换 Porsche 718 → 📌 置顶（背景图全屏置顶）→ 取消置顶 → 切换 Macan S（深色系壁纸亦可选，深浅色不限制）。*
 
 ## 功能特性
 
@@ -174,7 +180,7 @@ const META = {
 
 **更换默认壁纸**（`src/client/bg-images.ts`）：修改 `DEFAULT_WALLPAPER_ID` 为任意壁纸 id 即可（默认 `yu7`）。
 
-**运行时切换**：右下角 🎨 按钮 → 当前主题下的缩略图面板 → 点击即切换并写入 localStorage（`dsh-ui-pet.wallpaper.light` / `.dark`），刷新与重启后保留。
+**运行时切换**：右下角 🎨 按钮 → 全部壁纸缩略图面板（深浅色不限制）→ 点击即切换并写入 localStorage（`dsh-ui-pet.wallpaper`），刷新与重启后保留。
 
 ## 兼容性说明
 
@@ -187,7 +193,7 @@ const META = {
 
 - **无持久化**：宠物位置、饱腹度、心情、显隐状态均为会话级内存，刷新即重置。
 - **无配置面板**：所有参数需改源码重新构建，未暴露给用户设置。
-- **壁纸硬编码**：深色 / 浅色壁纸以 base64 内嵌于 `bg-images.ts`，无外部请求；如需动态加载需自行改造。
+- **壁纸候选统一管理**：所有候选壁纸（不区分深浅色）以 base64 内嵌于 `bg-images.generated.ts`（prebuild 自动生成），无外部请求；如需动态加载需自行改造。
 - **召唤按钮定位依赖 DOM 查找**：通过查找「Session log」按钮定位，若 Shell 结构变更可能失效。
 - **无障碍支持有限**：宠物交互区标注 `role="button"` 与 `tabIndex`，但缺少完整 ARIA 属性与键盘操作。
 - **光晕为遗留实现**：鼠标跟随光晕样式定义在未挂载的 `Background.tsx`（`EngineerBackground`），当前壁纸路径不渲染光晕。
