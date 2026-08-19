@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-salted-fish-pet
+# @deepseek-ai/dsh-client-ui-pet
 
 > **咸鱼宠物（Salted Fish Pet）** —— 为 DeepSeek Harness Web UI 打造的桌面宠物插件。一只悬浮在右下角的咸鱼吉祥物，叠加全视口工程师主题壁纸。纯前端展示插件，无服务端行为。
 
@@ -6,7 +6,7 @@
 
 ## 简介
 
-`ui-salted-fish-pet` 是一个基于 [Cordis](https://cordis.js.org/) 的客户端 UI 插件（`platform: 'web'`）。它向 DeepSeek Harness（DSH）Web Shell 的 `shell.overlay` 槽位注入两部分内容：
+`ui-pet` 是一个基于 [Cordis](https://cordis.js.org/) 的客户端 UI 插件（`platform: 'web'`）。它向 DeepSeek Harness（DSH）Web Shell 的 `shell.overlay` 槽位注入两部分内容：
 
 1. **咸鱼宠物**：一只可拖拽、可喂食、会随机吐槽的咸鱼吉祥物；
 2. **工程师壁纸**：随主题切换的深色 / 浅色全屏壁纸，透过透明主题背景显示。
@@ -81,46 +81,35 @@ src/
 
 ```bash
 cd $DSH_HOME/packages/client/
-git clone https://github.com/tangyuewei/dsh-salted-fish-pet.git ui-salted-fish-pet
-cd ui-salted-fish-pet
-pnpm run build
+git clone https://github.com/tangyuewei/dsh-client-ui-pet.git
 ```
 
-> **关于目录命名**：目录名可任意（如 `dsh-salted-fish-pet`），不影响功能。本项目约定使用 `ui-salted-fish-pet` 以与仓库中其他 `ui-*` 插件保持一致。
+> clone 后目录名即为 `dsh-client-ui-pet`，无需重命名，也无需在插件目录内单独构建；构建由步骤二的一键脚本统一完成。
 
-### 步骤二：将插件注册到 Web Bundle
-
-插件需要在 `packages/bundle/web-app` 中注册才会被 Loader 加载。需要修改两个文件：
-
-**1. `packages/bundle/web-app/package.json`** — 在 `dependencies` 中添加：
-
-```json
-"@deepseek-ai/dsh-client-ui-salted-fish-pet": "workspace:^"
-```
-
-**2. `packages/bundle/web-app/cordis.patch.yml`** — 在 browser plugin roster（`- insert:` 下的 `ui-*` 条目列表末尾）添加：
-
-```yaml
-    - id: ui-salted-fish-pet
-      name: '@deepseek-ai/dsh-client-ui-salted-fish-pet'
-```
-
-### 步骤三：重新安装依赖并构建
+### 步骤二：运行一键安装脚本
 
 ```bash
-cd $DSH_HOME
-pnpm install
-pnpm run build:lib:host
-pnpm run build:web
+cd dsh-client-ui-pet
+bash install.sh
 ```
 
-### 步骤四：启动
+脚本自动完成注册、安装依赖与构建，逐步输出进度，任一步失败会打印 `[ERROR]` 提示并中断（退出码非 0），无需手动编辑任何文件：
+
+1. **校验环境**：检查 `git` / `node` / `pnpm` 可用，并校验 DSH 源码目录结构完整；
+2. **自动定位 DSH_HOME**：默认取脚本所在目录的上三级（`dsh-client-ui-pet` → `packages/client` → `packages` → `$DSH_HOME`）；若 DSH 源码不在该位置，可用环境变量覆盖：`DSH_HOME=/path/to/dsh bash install.sh`；
+3. **注册依赖**：在 `packages/bundle/web-app/package.json` 的 `dependencies` 中添加 `@deepseek-ai/dsh-client-ui-pet: "workspace:^"`；
+4. **注册插件条目**：在 `packages/bundle/web-app/cordis.patch.yml` 的 `- insert:` 块末尾追加插件条目（id 与 name 从插件自身 `package.json` / `cordis.patch.yml` 自动读取，无需手动同步）；
+5. **安装依赖并构建**：回到 `$DSH_HOME` 依次执行 `pnpm install` 与 `pnpm run build`。
+
+> 脚本幂等：注册条目已存在时会自动跳过，重复运行安全；修复问题后可随时重跑。
+
+### 步骤三：启动
 
 ```bash
 pnpm dsh web
 ```
 
-插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@deepseek-ai/dsh-client-ui-salted-fish-pet` 已启用。
+插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@deepseek-ai/dsh-client-ui-pet` 已启用。
 
 ## 自定义配置
 
