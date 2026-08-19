@@ -1,3 +1,17 @@
+/* Pinned wallpaper layer: full-viewport, above all DSH UI (which tops out at
+   z-index 1000) but BELOW this plugin's own trigger/panel (9999) so the
+   unpin control is always reachable. pointer-events: none keeps it a pure
+   visual layer. */
+.pinLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .trigger {
   position: fixed;
   right: 20px;
@@ -18,11 +32,6 @@
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
   transition: transform 120ms ease, box-shadow 120ms ease;
-}
-/* Pinned state: the trigger must stay ABOVE the pinned panel (10020), or the
-   user could never reach the unpin control. 10030 > 10020. */
-.triggerPinned {
-  z-index: 10030;
 }
 .trigger:hover {
   transform: translateY(-1px);
@@ -54,22 +63,13 @@
   -webkit-backdrop-filter: blur(22px) saturate(160%);
   backdrop-filter: blur(22px) saturate(160%);
 }
-/* Pinned: float above everything (settings overlay is z-index 1000; the pet
-   sits in the overlay layer) while staying below the 🎨 trigger (10030). */
-.panelPinned {
-  z-index: 10020;
-  border-color: rgba(57, 100, 244, 0.55);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.24), 0 0 0 2px rgba(57, 100, 244, 0.12);
-}
+/* The panel itself keeps z-index 9999 (same as the trigger) in both states:
+   "pin" only adds the .pinLayer below it, it never moves the panel. */
 :global(body[data-ds-dark-theme]) .panel {
   background: rgba(28, 28, 32, 0.6);
   color: #f1f3f5;
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-}
-:global(body[data-ds-dark-theme]) .panelPinned {
-  border-color: rgba(125, 151, 255, 0.6);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(125, 151, 255, 0.18);
 }
 
 .title {

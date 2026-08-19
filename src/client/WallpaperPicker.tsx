@@ -10,6 +10,7 @@ import { isPetHidden, subscribePetHidden } from './visibility'
 import {
   WALLPAPERS,
   getCurrentWallpaperId,
+  getWallpaperUrl,
   getWallpapersByTheme,
   setCurrentWallpaperId,
   subscribeWallpaperChange,
@@ -53,13 +54,27 @@ export function WallpaperPicker(): React.JSX.Element | null {
   const theme = isDarkTheme() ? 'dark' : 'light'
   const choices = getWallpapersByTheme(theme)
   const currentId = getCurrentWallpaperId(theme)
+  const currentUrl = getWallpaperUrl(theme)
 
   return (
     <>
+      {/* Pinned: a full-viewport layer that brings the wallpaper itself to the
+          very top (z-index 5000 — above every DSH UI layer, which tops out at
+          1000, but BELOW this panel/trigger at 9999). pointer-events: none so
+          it is purely visual and never intercepts clicks. Unpinning removes
+          the layer and the wallpaper returns to the body background. */}
+      {pinned && (
+        <div
+          className={styles.pinLayer}
+          style={{ backgroundImage: `url("${currentUrl}")` }}
+          aria-hidden
+        />
+      )}
+
       <button
         type="button"
         ref={triggerRef}
-        className={`${styles.trigger} ${pinned ? styles.triggerPinned : ''}`}
+        className={styles.trigger}
         aria-label="选择壁纸"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
@@ -71,7 +86,7 @@ export function WallpaperPicker(): React.JSX.Element | null {
       {open && (
         <div
           ref={panelRef}
-          className={`${styles.panel} ${pinned ? styles.panelPinned : ''}`}
+          className={styles.panel}
           role="dialog"
           aria-label="选择壁纸"
         >
