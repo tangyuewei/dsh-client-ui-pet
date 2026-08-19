@@ -4,7 +4,7 @@
  * localStorage and broadcast via the wallpaper-change CustomEvent so the
  * background module re-applies the new image without a remount.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSyncExternalStore } from 'react'
 import { isPetHidden, subscribePetHidden } from './visibility'
 import {
@@ -34,6 +34,14 @@ export function WallpaperPicker(): React.JSX.Element | null {
     return () => { themeObs.disconnect(); u1(); u2() }
   }, [])
 
+  // Keep the trigger + panel reachable so the global outside-click handler
+  // can tell a click inside our UI apart from a click elsewhere. Crucially
+  // the handler must NOT use capture phase nor `once`: a capture listener
+  // fires BEFORE the tile's own onClick and would unmount the panel (and its
+  // buttons) before React dispatches the click, silently swallowing the pick.
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
   if (hidden) return null
 
   const theme = isDarkTheme() ? 'dark' : 'light'
@@ -44,6 +52,7 @@ export function WallpaperPicker(): React.JSX.Element | null {
     <>
       <button
         type="button"
+        ref={triggerRef}
         className={styles.trigger}
         aria-label="选择壁纸"
         aria-expanded={open}
@@ -55,12 +64,10 @@ export function WallpaperPicker(): React.JSX.Element | null {
 
       {open && (
         <div
+          ref={panelRef}
           className={styles.panel}
           role="dialog"
           aria-label="选择壁纸"
-          // Stop the global click-elsewhere-to-close logic from immediately
-          // closing the panel we just opened.
-          onClick={e => e.stopPropagation()}
         >
           <div className={styles.title}>
             <span>{theme === 'dark' ? '深色主题壁纸' : '浅色主题壁纸'}</span>
@@ -90,9 +97,13 @@ export function WallpaperPicker(): React.JSX.Element | null {
         </div>
       )}
 
-      {/* Global click closes the panel when the user clicks anywhere else. */}
+      {/* Close the panel when the user clicks anywhere outside our UI. */}
       {open && (
-        <ClickOutsideCloser onClose={() => setOpen(false)} />
+        <ClickOutsideCloser
+          onClose={() => setOpen(false)}
+          triggerRef={triggerRef}
+          panelRef={panelRef}
+        />
       )}
 
       {/* Suppress the unused-import warning for WALLPAPERS — it is used by
@@ -102,15 +113,25 @@ export function WallpaperPicker(): React.JSX.Element | null {
   )
 }
 
-function ClickOutsideCloser({ onClose }: { onClose: () => void }): null {
+function ClickOutsideCloser({
+  onClose,
+  triggerRef,
+  panelRef,
+}: {
+  onClose: () => void
+  triggerRef: React.RefObject<HTMLButtonElement | null>
+  panelRef: React.RefObject<HTMLDivElement | null>
+}): null {
   useEffect(() => {
-    const handler = () => onClose()
-    // Defer attaching so the click that opened the panel doesn't immediately
-    // close it.
-    const t = setTimeout(() => {
-      window.addEventListener('click', handler, { capture: true, once: true })
-    }, 0)
-    return () => { clearTimeout(t); window.removeEventListener('click', handler, { capture: true } as any) }
-  }, [onClose])
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node | null
+      if (triggerRef.current?.contains(t)) return // toggles via its own onClick
+      if (panelRef.current?.contains(t)) return   // inside the panel: let buttons act
+      onClose()
+    }
+    // Bubble phase (default): the tile's onClick runs first, then this fires.
+    window.addEventListener('click', handler)
+    return () => window.removeEventListener('click', handler)
+  }, [onClose, triggerRef, panelRef])
   return null
 }
