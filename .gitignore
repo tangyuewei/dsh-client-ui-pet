@@ -1,0 +1,5 @@
+# WorkBuddy 项目数据（本地记忆，不随仓库分发）
+.workbuddy/
+
+# 依赖
+node_modules/
