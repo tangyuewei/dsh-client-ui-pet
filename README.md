@@ -31,6 +31,7 @@
 - **浅色主题**：内嵌 base64 JPEG 壁纸（源自 `src/client/porsche-718.jpg`，Porsche 718，导出为 `BG_LIGHT`）。
 - **主题联动**：监听 `body[data-ds-dark-theme]` 属性变化（`MutationObserver`），主题切换瞬间无缝切换壁纸。
 - **透出机制**：通过 CSS 变量将主题背景基色设为透明（`--dsw-alias-bg-base: transparent`），壁纸从 `body` 透出，无需额外 DOM 节点或 z-index 争用。
+- **玻璃拟态列**：侧边栏与中间列采用半透明 + `backdrop-filter: blur + saturate` 的毛玻璃效果，壁纸色调模糊透出，导航与正文保持可读，呈现现代科技氛围；通过 `[class$="sidebarCol"]` / `[class$="centerCol"]` 结尾选择器命中上层层级（仅依赖 CSS Modules local 名后缀，不依赖哈希前缀），深浅主题分别适配透明度。
 - **鼠标跟随**：`mousemove`（`passive`）实时写入 `--bg-mx/--bg-my` CSS 变量，为鼠标跟随光晕（见 `Background.tsx` 的 `EngineerBackground`）提供定位。
 
 ### 召唤 / 隐藏

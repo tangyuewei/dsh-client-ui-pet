@@ -62,6 +62,29 @@ body.dsh-bg-glow #root,
 body.dsh-bg-glow #root * {
   --dsw-alias-bg-base: transparent !important;
 }
+
+/* ===== Glassmorphism: frosted columns over the wallpaper ===== */
+/* Sidebar: translucent + heavy blur so the wallpaper glows through, nav stays readable */
+body.dsh-bg-glow [class$="sidebarCol"] {
+  background: rgba(255, 255, 255, 0.5) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  backdrop-filter: blur(26px) saturate(160%);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55);
+}
+body.dsh-bg-glow[data-ds-dark-theme] [class$="sidebarCol"] {
+  background: rgba(21, 21, 23, 0.5) !important;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Center column: translucent + moderate blur, more solid than sidebar for text legibility */
+body.dsh-bg-glow [class$="centerCol"] {
+  background: rgba(255, 255, 255, 0.62) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"] {
+  background: rgba(21, 21, 23, 0.62) !important;
+}
 `
     document.head.appendChild(glowStyle)
 
