@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "bundle": "node scripts/build-wallpapers.mjs && tsdown",
-    "watch": "tsdown --watch",
+    "watch": "node scripts/watch.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build:wallpapers": "node scripts/build-wallpapers.mjs"
   },

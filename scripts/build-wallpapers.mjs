@@ -18,15 +18,16 @@ const wallpapersDir = join(root, 'src', 'client', 'wallpapers')
 const buildDir = join(root, 'src', 'client', '.wallpapers-build')
 const outFile = join(root, 'src', 'client', 'bg-images.generated.ts')
 
-// id (filename without ext) -> { name, theme }
+// id (filename without ext) -> display name. Theme-agnostic: every wallpaper
+// is available in both light and dark mode.
 const META = {
-  'porsche-718': { name: 'Porsche 718', theme: 'light' },
-  'yu7-3':       { name: 'Yu7 · 公路',   theme: 'light' },
-  'yu7':         { name: 'Yu7 · 公路',   theme: 'light' },
-  'yu7-gt':      { name: 'Yu7 GT · 日落', theme: 'light' },
-  'mcan-s':      { name: 'Macan S',      theme: 'dark'  },
-  'su7-1':       { name: 'Su7 · 蓝色',   theme: 'dark'  },
-  'su7':         { name: 'Su7 · 蓝色',   theme: 'dark'  },
+  'porsche-718': { name: 'Porsche 718' },
+  'yu7-3':       { name: 'Yu7 · 公路' },
+  'yu7':         { name: 'Yu7 · 公路' },
+  'yu7-gt':      { name: 'Yu7 GT · 日落' },
+  'mcan-s':      { name: 'Macan S' },
+  'su7-1':       { name: 'Su7 · 蓝色' },
+  'su7':         { name: 'Su7 · 蓝色' },
 }
 
 mkdirSync(buildDir, { recursive: true })
@@ -45,7 +46,7 @@ if (entries.length === 0) {
 const wallpapers = []
 for (const f of entries) {
   const id = basename(f, extname(f))
-  const meta = META[id] ?? { name: id, theme: 'light' }
+  const meta = META[id] ?? { name: id }
   const out = join(buildDir, `${id}.jpg`)
 
   // sips: -Z keeps aspect, max edge 1920; output as jpeg @ normal quality.
@@ -60,8 +61,8 @@ for (const f of entries) {
 
   const buf = readFileSync(out)
   const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`
-  wallpapers.push({ id, name: meta.name, theme: meta.theme, dataUrl, bytes: buf.length })
-  console.log(`[wallpapers] ${id} (${meta.theme}) -> ${(buf.length / 1024).toFixed(0)} KB`)
+  wallpapers.push({ id, name: meta.name, dataUrl, bytes: buf.length })
+  console.log(`[wallpapers] ${id} -> ${(buf.length / 1024).toFixed(0)} KB`)
 }
 
 const totalBytes = wallpapers.reduce((s, w) => s + w.bytes, 0)
@@ -74,13 +75,12 @@ const header = `/**
 export interface Wallpaper {
   id: string
   name: string
-  theme: 'light' | 'dark'
   dataUrl: string
 }
 `
 const body = 'export const WALLPAPERS: Wallpaper[] = [\n'
   + wallpapers.map(w =>
-      `  { id: ${JSON.stringify(w.id)}, name: ${JSON.stringify(w.name)}, theme: ${JSON.stringify(w.theme)}, dataUrl: ${JSON.stringify(w.dataUrl)} },`
+      `  { id: ${JSON.stringify(w.id)}, name: ${JSON.stringify(w.name)}, dataUrl: ${JSON.stringify(w.dataUrl)} },`
     ).join('\n')
   + '\n]\n'
 

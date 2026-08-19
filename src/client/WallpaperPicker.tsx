@@ -9,16 +9,13 @@ import { useSyncExternalStore } from 'react'
 import { isPetHidden, subscribePetHidden } from './visibility'
 import {
   WALLPAPERS,
+  getAllWallpapers,
   getCurrentWallpaperId,
   getWallpaperUrl,
-  getWallpapersByTheme,
   setCurrentWallpaperId,
   subscribeWallpaperChange,
 } from './bg-images'
 import styles from './WallpaperPicker.module.css'
-
-const isDarkTheme = (): boolean =>
-  typeof document !== 'undefined' && document.body.hasAttribute('data-ds-dark-theme')
 
 export function WallpaperPicker(): React.JSX.Element | null {
   // Hide entirely while the user has the pet mascot dismissed.
@@ -30,15 +27,12 @@ export function WallpaperPicker(): React.JSX.Element | null {
   // The 🎨 trigger keeps an even higher z-index (10030) so the pin toggle is
   // always reachable even when the panel is pinned above everything else.
   const [pinned, setPinned] = useState(false)
-  // Re-render when either the theme or the chosen wallpaper changes so the
-  // selected highlight stays in sync.
+  // Re-render when the chosen wallpaper changes so the selected highlight
+  // and the pinned layer stay in sync.
   const [, setTick] = useState(0)
   useEffect(() => {
-    const themeObs = new MutationObserver(() => setTick(t => t + 1))
-    themeObs.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
-    const u1 = subscribeWallpaperChange('light', () => setTick(t => t + 1))
-    const u2 = subscribeWallpaperChange('dark', () => setTick(t => t + 1))
-    return () => { themeObs.disconnect(); u1(); u2() }
+    const u = subscribeWallpaperChange(() => setTick(t => t + 1))
+    return u
   }, [])
 
   // Keep the trigger + panel reachable so the global outside-click handler
@@ -51,10 +45,9 @@ export function WallpaperPicker(): React.JSX.Element | null {
 
   if (hidden) return null
 
-  const theme = isDarkTheme() ? 'dark' : 'light'
-  const choices = getWallpapersByTheme(theme)
-  const currentId = getCurrentWallpaperId(theme)
-  const currentUrl = getWallpaperUrl(theme)
+  const choices = getAllWallpapers()
+  const currentId = getCurrentWallpaperId()
+  const currentUrl = getWallpaperUrl()
 
   return (
     <>
@@ -91,7 +84,7 @@ export function WallpaperPicker(): React.JSX.Element | null {
           aria-label="选择壁纸"
         >
           <div className={styles.title}>
-            <span>{theme === 'dark' ? '深色主题壁纸' : '浅色主题壁纸'}</span>
+            <span>选择壁纸</span>
             <button
               type="button"
               className={`${styles.pinBtn} ${pinned ? styles.pinBtnActive : ''}`}
@@ -116,7 +109,7 @@ export function WallpaperPicker(): React.JSX.Element | null {
                   aria-pressed={active}
                   aria-label={w.name}
                   onClick={() => {
-                    setCurrentWallpaperId(theme, w.id)
+                    setCurrentWallpaperId(w.id)
                     // Pinned panels stay open so the user can keep comparing.
                     if (!pinned) setOpen(false)
                   }}

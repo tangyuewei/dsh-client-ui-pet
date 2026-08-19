@@ -25,11 +25,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 const setBg = (el: HTMLElement, prop: string, val: string) =>
   el.style.setProperty(prop, val, 'important')
 
-/** Get current theme-appropriate background URL. */
-const getBgUrl = () => {
-  const dark = document.body.hasAttribute('data-ds-dark-theme')
-  return getWallpaperUrl(dark ? 'dark' : 'light')
-}
+/** Get the currently selected wallpaper URL (theme-agnostic). */
+const getBgUrl = () => getWallpaperUrl()
 
 /** Apply wallpaper to body. */
 const applyWallpaper = (body: HTMLElement) => {
@@ -154,12 +151,9 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"]::before {
     })
     themeObserver.observe(b, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
 
-    // Re-apply when the user picks a different wallpaper (light or dark).
-    const unsubscribeWallpaperLight = subscribeWallpaperChange('light', () => {
-      if (!document.body.hasAttribute('data-ds-dark-theme')) applyWallpaper(b)
-    })
-    const unsubscribeWallpaperDark = subscribeWallpaperChange('dark', () => {
-      if (document.body.hasAttribute('data-ds-dark-theme')) applyWallpaper(b)
+    // Re-apply when the user picks a different wallpaper (theme-agnostic now).
+    const unsubscribeWallpaper = subscribeWallpaperChange(() => {
+      if (b.classList.contains('dsh-bg-glow')) applyWallpaper(b)
     })
 
     // Mouse tracking — compositor-only (for future use)
@@ -172,8 +166,7 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="centerCol"]::before {
     cleanup = () => {
       unsubscribeVisibility()
       themeObserver.disconnect()
-      unsubscribeWallpaperLight()
-      unsubscribeWallpaperDark()
+      unsubscribeWallpaper()
       window.removeEventListener('mousemove', onMove)
       b.classList.remove('dsh-bg-glow')
       b.style.removeProperty('--bg-mx')
