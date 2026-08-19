@@ -92,7 +92,32 @@ scripts/
 
 ## 安装方式
 
-### 前提：从源码编译 DeepSeek Harness
+### 方式 A：npm 发布版（`npx @deepseek-ai/dsh web` 用户）
+
+如果你是通过 `npx @deepseek-ai/dsh web` 运行 DeepSeek Harness（未 clone 源码），请使用 DSH 自带的 **profile 插件管理命令**安装本插件，**不需要** clone 仓库或运行 `install.sh`（`install.sh` 仅适用于源码场景）：
+
+```bash
+npx @deepseek-ai/dsh plugin --profile web add @deepseek-ai/dsh-client-ui-pet
+```
+
+> **前提**：本机需安装 `pnpm`（`dsh plugin add` 本质是在 profile 目录内执行 `pnpm add`）。
+
+该命令做的事情：
+
+1. 首次运行会自动初始化**持久化 profile 目录 `~/.dsh/profiles/web`**（与 npx 缓存无关，重开终端 / 重跑 npx 依然生效）；
+2. 在该目录内执行 `pnpm add @deepseek-ai/dsh-client-ui-pet` 安装插件及其 peer 依赖；
+3. 因插件声明了 `dsh.bundle.patch`，包名会自动追加进 profile 的 `dsh.profile.bundles` 清单；
+4. 之后 `npx @deepseek-ai/dsh web` 启动时，DSH 会按 bundle 顺序叠加插件的 `cordis.patch.yml`，在 `shell.overlay` 注入咸鱼宠物与壁纸。
+
+安装完成后重新启动 `npx @deepseek-ai/dsh web`，即可在右下角看到咸鱼宠物与工程师壁纸（可通过 Settings → Plugins 确认插件已启用）。
+
+如需卸载：
+
+```bash
+npx @deepseek-ai/dsh plugin --profile web remove @deepseek-ai/dsh-client-ui-pet
+```
+
+### 方式 B：从源码编译 DeepSeek Harness
 
 以下步骤适用于从 DeepSeek Harness 源码启动的场景。克隆官方仓库后确保能正常 `pnpm dsh web` 启动。
 
