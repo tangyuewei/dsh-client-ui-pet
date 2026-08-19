@@ -63,13 +63,35 @@ body.dsh-bg-glow #root * {
   --dsw-alias-bg-base: transparent !important;
 }
 
-/* ===== Glassmorphism: frosted columns over the wallpaper ===== */
+/* ===== Glassmorphism: frosted columns over the wallpaper =====
+   NOTE: backdrop-filter MUST live on a ::before pseudo-element, not on the
+   column itself. backdrop-filter on the column makes that element the
+   containing block for descendant position:fixed elements, which would
+   trap any portalled dialog/popover (e.g. the settings panel portal
+   renders inside sidebarCol) inside the 280px column.
+
+   We deliberately do NOT use isolation:isolate on the column either:
+   isolation creates a stacking context, and Chrome clips fixed-position
+   descendants of that context to its overflow:hidden. The ::before
+   pseudo-element uses z-index:-1, which (without isolation) escapes to
+   the body backdrop — yielding a uniform whole-page frosted glass look
+   rather than a column-local blur. The half-transparent column backgrounds
+   still layer cleanly on top. */
+
 /* Sidebar: translucent + heavy blur so the wallpaper glows through, nav stays readable */
 body.dsh-bg-glow [class$="sidebarCol"] {
   background: rgba(255, 255, 255, 0.5) !important;
+  position: relative;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55);
+}
+body.dsh-bg-glow [class$="sidebarCol"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   -webkit-backdrop-filter: blur(26px) saturate(160%);
   backdrop-filter: blur(26px) saturate(160%);
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55);
 }
 body.dsh-bg-glow[data-ds-dark-theme] [class$="sidebarCol"] {
   background: rgba(21, 21, 23, 0.5) !important;
@@ -79,6 +101,14 @@ body.dsh-bg-glow[data-ds-dark-theme] [class$="sidebarCol"] {
 /* Center column: translucent + moderate blur, more solid than sidebar for text legibility */
 body.dsh-bg-glow [class$="centerCol"] {
   background: rgba(255, 255, 255, 0.62) !important;
+  position: relative;
+}
+body.dsh-bg-glow [class$="centerCol"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   backdrop-filter: blur(18px) saturate(140%);
 }
