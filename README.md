@@ -73,30 +73,54 @@ src/
 
 ## 安装方式
 
-### 方式一：作为 DSH Profile Bundle 安装（推荐）
+### 前提：从源码编译 DeepSeek Harness
+
+以下步骤适用于从 DeepSeek Harness 源码启动的场景。克隆官方仓库后确保能正常 `pnpm dsh web` 启动。
+
+### 步骤一：将插件放入 client 目录
 
 ```bash
-# 1. 将包放入 profiles 的 node_modules
-cd $DSH_HOME/profiles/node_modules
-git clone <this-repo> @deepseek-ai/dsh-client-ui-salted-fish-pet
+cd $DSH_HOME/packages/client/
+git clone https://github.com/tangyuewei/dsh-salted-fish-pet.git ui-salted-fish-pet
+cd ui-salted-fish-pet
+pnpm run build
+```
 
-# 2. 在 profile 的 cordis.yml / dsh plugin 命令中启用
-dsh plugin --profile web add @deepseek-ai/dsh-client-ui-salted-fish-pet
+> **关于目录命名**：目录名可任意（如 `dsh-salted-fish-pet`），不影响功能。本项目约定使用 `ui-salted-fish-pet` 以与仓库中其他 `ui-*` 插件保持一致。
 
-# 3. 重新构建前端
+### 步骤二：将插件注册到 Web Bundle
+
+插件需要在 `packages/bundle/web-app` 中注册才会被 Loader 加载。需要修改两个文件：
+
+**1. `packages/bundle/web-app/package.json`** — 在 `dependencies` 中添加：
+
+```json
+"@deepseek-ai/dsh-client-ui-salted-fish-pet": "workspace:^"
+```
+
+**2. `packages/bundle/web-app/cordis.patch.yml`** — 在 browser plugin roster（`- insert:` 下的 `ui-*` 条目列表末尾）添加：
+
+```yaml
+    - id: ui-salted-fish-pet
+      name: '@deepseek-ai/dsh-client-ui-salted-fish-pet'
+```
+
+### 步骤三：重新安装依赖并构建
+
+```bash
 cd $DSH_HOME
-pnpm --filter @deepseek-ai/dsh-web-frontend build
+pnpm install
+pnpm run build:lib:host
+pnpm run build:web
 ```
 
-### 方式二：开发模式（源码热重载）
+### 步骤四：启动
 
 ```bash
-git clone <this-repo>
-cd dsh-client-ui-salted-fish-pet
-pnpm install
-pnpm run watch   # 监听构建 lib/
-# 然后在 DSH web 启动时指向本地构建产物，或配置 Vite alias
+pnpm dsh web
 ```
+
+插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@deepseek-ai/dsh-client-ui-salted-fish-pet` 已启用。
 
 ## 自定义配置
 
