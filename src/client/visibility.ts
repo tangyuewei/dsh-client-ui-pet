@@ -9,7 +9,23 @@
  * to visible while the background stays hidden.
  */
 
-let hidden = false
+const STORAGE_KEY = 'dsh-ui-pet.petHidden'
+
+/** Read persisted visibility. Same guard as bg-images.ts for SSR safety. */
+function readHidden(): boolean {
+  if (typeof localStorage === 'undefined') return false
+  return localStorage.getItem(STORAGE_KEY) === '1'
+}
+
+/** Persist visibility so a page refresh keeps the user's choice. */
+function writeHidden(value: boolean): void {
+  if (typeof localStorage === 'undefined') return
+  if (value) localStorage.setItem(STORAGE_KEY, '1')
+  else localStorage.removeItem(STORAGE_KEY)
+}
+
+// Initialize from localStorage instead of always defaulting to visible.
+let hidden = readHidden()
 
 const listeners = new Set<() => void>()
 
@@ -18,10 +34,11 @@ export function isPetHidden(): boolean {
   return hidden
 }
 
-/** Set visibility and notify every subscriber (pet button, background). */
+/** Set visibility, persist it, and notify every subscriber (pet button, background). */
 export function setPetHidden(next: boolean): void {
   if (hidden === next) return
   hidden = next
+  writeHidden(next)
   for (const listener of listeners) listener()
 }
 
