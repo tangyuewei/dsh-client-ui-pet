@@ -155,6 +155,29 @@ pnpm dsh web
 
 插件加载后可在浏览器中看到右下角的咸鱼宠物与工程师壁纸。可通过 Settings → Plugins 确认 `@tangyuewei/dsh-client-ui-pet` 已启用。
 
+### 步骤四：卸载（源码场景）
+
+若需从源码工作区移除本插件，运行仓库内的一键卸载脚本即可，它会精确反向 `install.sh` 的全部写操作：
+
+```bash
+cd dsh-client-ui-pet
+bash uninstall.sh
+```
+
+脚本依次执行：
+
+1. 从 `packages/bundle/web-app/package.json` 的 `dependencies` 移除插件依赖；
+2. 从 `packages/bundle/web-app/cordis.patch.yml` 的插件条目（`- id: ui-pet`）移除；
+3. 重新执行 `pnpm install` 与 `pnpm run build`，使 DSH 工作区恢复一致。
+
+脚本特性：
+
+- **幂等**：插件未注册时自动跳过对应步骤，可安全重跑；每次执行结束会校验两处注册均已消失；
+- **预演**：`bash uninstall.sh --dry-run` 只报告将要变更的内容，不修改任何文件；
+- **跳过重建**：`bash uninstall.sh --no-rebuild` 仅撤销注册、不重新 `install` / `build`（适合临时禁用）；
+- **指定 DSH_HOME**：与 `install.sh` 一致，可用 `DSH_HOME=/path/to/dsh bash uninstall.sh` 覆盖路径；
+- **注意**：插件源码目录本身不会被删除，仅从 `web-app` 注销；需要时可重新运行 `bash install.sh` 恢复。
+
 ## 自定义配置
 
 | 文件 | 可修改内容 |

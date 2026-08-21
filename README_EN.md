@@ -155,6 +155,29 @@ pnpm dsh web
 
 Once loaded you'll see the salted fish pet and engineer wallpaper in the bottom-right of the browser. Confirm via Settings → Plugins that `@tangyuewei/dsh-client-ui-pet` is enabled.
 
+### Step 4: Uninstall (source scenario)
+
+To remove this plugin from a source working tree, run the one-shot uninstall script in the repo — it precisely reverses every write that `install.sh` performed:
+
+```bash
+cd dsh-client-ui-pet
+bash uninstall.sh
+```
+
+The script runs in order:
+
+1. Removes the plugin dependency from `packages/bundle/web-app/package.json` `dependencies`;
+2. Removes the plugin entry (`- id: ui-pet`) from `packages/bundle/web-app/cordis.patch.yml`;
+3. Re-runs `pnpm install` and `pnpm run build` to restore a consistent DSH workspace.
+
+Script features:
+
+- **Idempotent**: steps are skipped automatically when the plugin isn't registered, so re-running is safe; each run ends by verifying both registrations are gone;
+- **Dry-run**: `bash uninstall.sh --dry-run` only reports what would change, modifying no files;
+- **Skip rebuild**: `bash uninstall.sh --no-rebuild` only reverses the registration without re-running `install` / `build` (useful for temporary disabling);
+- **Specify DSH_HOME**: consistent with `install.sh`, override with `DSH_HOME=/path/to/dsh bash uninstall.sh`;
+- **Note**: the plugin source directory itself is never deleted — only unregistered from `web-app`; re-run `bash install.sh` to restore when needed.
+
 ## Customization
 
 | File | What you can change |
