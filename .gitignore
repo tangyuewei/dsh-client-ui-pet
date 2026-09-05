@@ -15,3 +15,9 @@ src/client/bg-images.generated.ts
 
 # CodeBuddy 安全扫描产物
 .codebuddy/
+
+# IDE 本地配置
+.idea/
+
+# TypeScript 构建缓存
+lib/tsconfig.tsbuildinfo

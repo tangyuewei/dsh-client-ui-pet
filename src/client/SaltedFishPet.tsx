@@ -123,17 +123,27 @@ export function SaltedFishPet(): React.JSX.Element {
   const bubbleTimer = useRef<number | undefined>(undefined)
   const idleTimer = useRef<number | undefined>(undefined)
 
-  // Position the recall button left of the Session log button (header utilities area).
+  // Position the recall button left of the header utilities area. Prefer docking
+  // to a real header utility button; fall back to a fixed top-right anchor so the
+  // hide control never silently disappears when that button is absent (e.g. on
+  // routes where the session header slot doesn't render).
   useEffect(() => {
     const updatePos = () => {
       const btn = recallBtnRef.current
       if (!btn) return
       const target = Array.from(document.querySelectorAll('button')).find(el => el.textContent?.includes('Session log'))
-      if (!target) { btn.style.display = 'none'; return }
-      btn.style.display = ''
-      const rect = target.getBoundingClientRect()
-      btn.style.top = `${rect.top + (rect.height - btn.offsetHeight) / 2}px`
-      btn.style.left = `${rect.left - btn.offsetWidth - 8}px`
+      if (target) {
+        btn.style.display = ''
+        const rect = target.getBoundingClientRect()
+        btn.style.top = `${rect.top + (rect.height - btn.offsetHeight) / 2}px`
+        btn.style.left = `${rect.left - btn.offsetWidth - 8}px`
+      } else {
+        // Fallback: fixed top-right corner, clear any stale left/top from a
+        // previous successful dock so the CSS default (see .recallInline) wins.
+        btn.style.display = ''
+        btn.style.top = ''
+        btn.style.left = ''
+      }
     }
     updatePos()
     const id = setInterval(updatePos, 1500)

@@ -17,6 +17,8 @@
   cursor: pointer;
   z-index: 10000;
   position: fixed;
+  top: 12px;
+  right: 12px;
 }
 
 .recallInline:hover {
