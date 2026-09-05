@@ -119,45 +119,8 @@ export function SaltedFishPet(): React.JSX.Element {
   const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const dragMoved = useRef(false)
   const petRef = useRef<HTMLDivElement | null>(null)
-  const recallBtnRef = useRef<HTMLButtonElement | null>(null)
   const bubbleTimer = useRef<number | undefined>(undefined)
   const idleTimer = useRef<number | undefined>(undefined)
-
-  // Position the recall button left of the header utilities area. Prefer docking
-  // to a real header utility button; fall back to a fixed top-right anchor so the
-  // hide control never silently disappears when that button is absent (e.g. on
-  // routes where the session header slot doesn't render).
-  useEffect(() => {
-    const updatePos = () => {
-      const btn = recallBtnRef.current
-      if (!btn) return
-      const target = Array.from(document.querySelectorAll('button')).find(el => el.textContent?.includes('Session log'))
-      if (target) {
-        btn.style.display = ''
-        const rect = target.getBoundingClientRect()
-        btn.style.top = `${rect.top + (rect.height - btn.offsetHeight) / 2}px`
-        btn.style.left = `${rect.left - btn.offsetWidth - 8}px`
-        // .recallInline sets right:12px in CSS — with left+right both set the
-        // fixed element stretches across the viewport, overlapping the Session
-        // log button. Override inline with `auto` while docked.
-        btn.style.right = 'auto'
-      } else {
-        // Fallback: fixed top-right corner, clear any stale left/top/right from
-        // a previous successful dock so the CSS defaults (see .recallInline) win.
-        btn.style.display = ''
-        btn.style.top = ''
-        btn.style.left = ''
-        btn.style.right = ''
-      }
-    }
-    updatePos()
-    const id = setInterval(updatePos, 1500)
-    window.addEventListener('resize', updatePos)
-    return () => {
-      clearInterval(id)
-      window.removeEventListener('resize', updatePos)
-    }
-  }, [])
 
   const react = (next: Mood = pick(Object.keys(MOODS) as Mood[])) => {
     setMood(next)
@@ -260,7 +223,6 @@ export function SaltedFishPet(): React.JSX.Element {
   return (
     <>
       <button
-        ref={recallBtnRef}
         className={css.recallInline}
         onClick={() => setPetHidden(!hidden)}
         title={hidden ? '召唤咸鱼' : '隐藏咸鱼'}

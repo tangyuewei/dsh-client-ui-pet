@@ -17,8 +17,11 @@
   cursor: pointer;
   z-index: 10000;
   position: fixed;
+  /* Fixed anchor at 20% of the viewport width — clear of the header's
+     Session log / utilities cluster on the right (fixed with left only is
+     ambiguous under some layouts, so pin left and let width follow content). */
   top: 12px;
-  right: 12px;
+  left: 20%;
 }
 
 .recallInline:hover {
