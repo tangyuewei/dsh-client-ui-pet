@@ -17,11 +17,11 @@
   cursor: pointer;
   z-index: 10000;
   position: fixed;
-  /* Fixed anchor at 20% of the viewport width — clear of the header's
-     Session log / utilities cluster on the right (fixed with left only is
-     ambiguous under some layouts, so pin left and let width follow content). */
+  /* Anchored just left of the header's Session log download button.
+     Right-edge offset = header padding-right 28px + Session log width 111px
+     + 8px gap = 147px; 8% ≈ right:147px on 1680–1920 viewports. */
   top: 12px;
-  left: 20%;
+  right: 8%;
 }
 
 .recallInline:hover {
