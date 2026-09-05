@@ -19,9 +19,9 @@
   position: fixed;
   /* Anchored just left of the header's Session log download button.
      Right-edge offset = header padding-right 28px + Session log width 111px
-     + 8px gap = 147px; 8% ≈ right:147px on 1680–1920 viewports. */
+     + 8px gap = 147px; 10% ≈ right:147px on 1440–1680 viewports. */
   top: 12px;
-  right: 8%;
+  right: 10%;
 }
 
 .recallInline:hover {
