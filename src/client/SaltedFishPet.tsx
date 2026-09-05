@@ -137,6 +137,9 @@ export function SaltedFishPet(): React.JSX.Element {
         const rect = target.getBoundingClientRect()
         btn.style.top = `${rect.top + (rect.height - btn.offsetHeight) / 2}px`
         btn.style.left = `${rect.left - btn.offsetWidth - 8}px`
+        // CSS default right:12px would stretch the fixed element from left to
+        // right:12px, overlapping the Session log button — clear it while docked.
+        btn.style.right = ''
       } else {
         // Fallback: fixed top-right corner, clear any stale left/top from a
         // previous successful dock so the CSS default (see .recallInline) wins.
